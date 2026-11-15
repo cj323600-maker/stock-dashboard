@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>미국 주식 분석 대시보드</title>
+<style>
+:root {
+  color-scheme: light;
+  --bg: #f4f4f2;
+  --surface: #fcfcfb;
+  --border: #e3e2de;
+  --text: #0b0b0b;
+  --text-2: #52514e;
+  --text-3: #7a7974;
+  --grid: #ebeae6;
+  --accent: #184f95;
+  --accent-bg: #e6eefa;
+  --up: #c8302f;
+  --down: #1c5cab;
+  --s-close: #0b0b0b;
+  --s-ma20: #2a78d6;
+  --s-ma60: #eb6834;
+  --s-ma120: #1baf7a;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    color-scheme: dark;
+    --bg: #111110;
+    --surface: #1a1a19;
+    --border: #33322f;
+    --text: #f0efec;
+    --text-2: #c3c2b7;
+    --text-3: #96958c;
+    --grid: #2a2927;
+    --accent: #9ec5f4;
+    --accent-bg: #1d2c40;
+    --up: #f07b7a;
+    --down: #6da7ec;
+    --s-close: #f0efec;
+    --s-ma20: #3987e5;
+    --s-ma60: #d95926;
+    --s-ma120: #199e70;
+  }
+}
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Malgun Gothic", "Noto Sans KR", "Segoe UI", sans-serif;
+  font-size: 15px;
+  line-height: 1.5;
+  word-break: keep-all;
+  overflow-wrap: anywhere;
+}
+.wrap { max-width: 1080px; margin: 0 auto; padding: 16px 16px 40px; }
+header h1 { font-size: 20px; margin: 4px 0 2px; line-height: 1.3; }
+.meta { color: var(--text-2); font-size: 13px; }
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 16px;
+  margin-top: 12px;
+  min-width: 0;
+}
+h2 { font-size: 16px; margin: 0 0 10px; }
+h3 { font-size: 13px; font-weight: 600; color: var(--text-2); margin: 16px 0 8px; }
+.chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+.chip, .seg button {
+  font: inherit;
+  font-size: 14px;
+  color: var(--text);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 7px 13px;
+  min-height: 36px;
+  cursor: pointer;
+}
+.chip[aria-pressed="true"], .seg button[aria-pressed="true"] {
+  background: var(--accent-bg);
+  border-color: var(--accent);
+  color: var(--accent);
+  font-weight: 700;
+}
+.chip:focus-visible, .seg button:focus-visible, th button:focus-visible, tbody tr:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+.hero { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 12px; }
+.hero .sym { font-size: 22px; font-weight: 800; }
+.hero .nm { color: var(--text-2); font-size: 14px; }
+.price-row { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 12px; margin-top: 6px; }
+.price { font-size: 30px; font-weight: 800; font-variant-numeric: tabular-nums; line-height: 1.2; }
+.chg { font-size: 16px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.up { color: var(--up); }
+.down { color: var(--down); }
+.flat { color: var(--text-2); }
+.tiles { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+@media (min-width: 560px) { .tiles { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+@media (min-width: 860px) { .tiles { grid-template-columns: repeat(6, minmax(0, 1fr)); } .tiles.t4 { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+.tile { border: 1px solid var(--border); border-radius: 10px; padding: 10px; min-width: 0; }
+.tile .k { font-size: 12px; color: var(--text-2); }
+.tile .v { font-size: 18px; font-weight: 700; font-variant-numeric: tabular-nums; margin-top: 2px; }
+.tile .s { font-size: 11px; color: var(--text-3); margin-top: 2px; }
+.chart-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; }
+.chart-head h2 { margin: 0; }
+.seg { display: flex; flex-wrap: wrap; gap: 6px; }
+.seg button { padding: 5px 11px; min-height: 32px; font-size: 13px; }
+.legend { display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: 12px; color: var(--text-2); margin: 10px 0 4px; }
+.legend i { display: inline-block; width: 14px; height: 3px; border-radius: 2px; vertical-align: middle; margin-right: 5px; }
+.plot { position: relative; height: 280px; }
+.plot.small { height: 170px; }
+@media (min-width: 700px) { .plot { height: 360px; } .plot.small { height: 190px; } }
+.note { font-size: 12px; color: var(--text-3); margin: 8px 0 0; }
+.table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; margin: 0 -16px; padding: 0 16px; }
+table { border-collapse: collapse; width: 100%; min-width: 860px; font-size: 13px; font-variant-numeric: tabular-nums; }
+th, td { padding: 9px 8px; text-align: right; white-space: nowrap; border-bottom: 1px solid var(--border); }
+th { color: var(--text-2); font-weight: 600; font-size: 12px; }
+th button { font: inherit; color: inherit; background: none; border: 0; padding: 0; cursor: pointer; }
+th:first-child, td:first-child { text-align: left; position: sticky; left: 0; background: var(--surface); z-index: 1; }
+tbody tr { cursor: pointer; }
+tbody tr.sel td { background: var(--accent-bg); }
+td .sub { display: block; font-size: 11px; color: var(--text-3); font-weight: 400; }
+td b { font-weight: 700; }
+dl { margin: 0; font-size: 13px; }
+dt { font-weight: 700; margin-top: 10px; }
+dd { margin: 2px 0 0; color: var(--text-2); }
+footer { color: var(--text-3); font-size: 12px; margin-top: 16px; }
+#err { display: none; color: var(--up); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>미국 주식 분석 대시보드</h1>
+    <div class="meta" id="meta">데이터를 불러오는 중입니다.</div>
+  </header>
+  <div class="card" id="err"></div>
+
+  <div class="chips" id="chips" role="group" aria-label="종목 선택"></div>
+
+  <section class="card" id="detail" hidden>
+    <div class="hero"><span class="sym" id="d-sym"></span><span class="nm" id="d-name"></span></div>
+    <div class="price-row"><span class="price" id="d-price"></span><span class="chg" id="d-chg"></span></div>
+    <div class="note" id="d-prev"></div>
+    <h3>기간별 수익률</h3>
+    <div class="tiles" id="t-ret"></div>
+    <h3>기술 지표</h3>
+    <div class="tiles t4" id="t-tech"></div>
+  </section>
+
+  <section class="card" id="charts" hidden>
+    <div class="chart-head">
+      <h2 id="c-title">주가와 이동평균</h2>
+      <div class="seg" id="range" role="group" aria-label="차트 기간"></div>
+    </div>
+    <div class="legend" aria-hidden="true">
+      <span><i style="background:var(--s-close)"></i>종가</span>
+      <span><i style="background:var(--s-ma20)"></i>20일 이동평균</span>
+      <span><i style="background:var(--s-ma60)"></i>60일 이동평균</span>
+      <span><i style="background:var(--s-ma120)"></i>120일 이동평균</span>
+    </div>
+    <div class="plot"><canvas id="cv-price" role="img" aria-label="종가와 이동평균 추이 차트"></canvas></div>
+    <h3>RSI(14)</h3>
+    <div class="plot small"><canvas id="cv-rsi" role="img" aria-label="RSI(14) 추이 차트"></canvas></div>
+    <p class="note">RSI(14)의 점선은 70(과매수 구간 기준)과 30(과매도 구간 기준)입니다.</p>
+  </section>
+
+  <section class="card" id="compare" hidden>
+    <h2>전체 종목 비교</h2>
+    <div class="table-wrap">
+      <table>
+        <thead><tr id="thead"></tr></thead>
+        <tbody id="tbody"></tbody>
+      </table>
+    </div>
+    <p class="note">열 제목을 누르면 정렬되고, 행을 누르면 위쪽 상세가 해당 종목으로 바뀝니다. 표는 좌우로 밀어서 볼 수 있습니다.</p>
+  </section>
+
+  <section class="card" id="glossary" hidden>
+    <h2>용어 설명</h2>
+    <dl>
+      <dt>기준일</dt><dd>데이터에 반영된 마지막 미국 거래일입니다. 모든 숫자는 기준일 종가로 계산합니다.</dd>
+      <dt>종가</dt><dd>정규장 마감 가격입니다. 액면분할은 반영하고 배당은 반영하지 않습니다.</dd>
+      <dt>전일 대비</dt><dd>직전 거래일 종가와 비교한 변동 금액과 비율입니다.</dd>
+      <dt>수익률</dt><dd>기준일 종가를 비교일 종가로 나눈 뒤 1을 뺀 값입니다. 비교일은 달력 기준 1주, 1개월, 3개월, 6개월, 1년 전 날짜이며 그날이 휴장이면 그 이전 마지막 거래일입니다. 연초 대비는 전년도 마지막 거래일 종가와 비교합니다. 배당은 포함하지 않습니다.</dd>
+      <dt>이동평균</dt><dd>최근 20, 60, 120거래일 종가의 단순 평균입니다. 이동평균 대비는 종가가 이동평균보다 몇 퍼센트 위나 아래에 있는지 나타냅니다.</dd>
+      <dt>RSI(14)</dt><dd>최근 14거래일의 상승폭과 하락폭으로 계산하는 0에서 100 사이 지표입니다(Wilder 방식). 통상 70 이상을 과매수 구간, 30 이하를 과매도 구간으로 봅니다.</dd>
+      <dt>52주 고가, 52주 저가</dt><dd>기준일을 포함한 최근 52주 동안의 장중 최고가와 최저가입니다. 52주 고가 대비는 종가가 52주 고가보다 얼마나 낮은지 나타냅니다.</dd>
+      <dt>변동성</dt><dd>최근 60거래일 일간 로그수익률의 표준편차를 1년 기준(252거래일)으로 환산한 값입니다. 클수록 가격 등락이 큽니다.</dd>
+    </dl>
+  </section>
+
+  <footer>
+    데이터 출처는 Yahoo Finance이며 미국 장 마감 후 하루 한 번 갱신합니다. 이 화면은 참고용 정보이고 투자 권유가 아닙니다. 투자 판단과 결과에 대한 책임은 본인에게 있습니다.
+  </footer>
+</div>
+
+<script src="vendor/chart.umd.js"></script>
+<script>
+(function () {
+  'use strict';
+  var RANGES = [{ k: '3m', label: '3개월', months: 3 }, { k: '6m', label: '6개월', months: 6 }, { k: '1y', label: '1년', months: 12 }, { k: '2y', label: '2년', months: 24 }];
+  var RET = [['1w', '1주'], ['1m', '1개월'], ['3m', '3개월'], ['6m', '6개월'], ['1y', '1년'], ['ytd', '연초 대비']];
+  var COLS = [
+    { k: 'symbol', label: '종목', get: function (t) { return t.symbol; } },
+    { k: 'close', label: '종가', get: function (t) { return t.summary.close; }, fmt: usd },
+    { k: 'chg', label: '전일 대비', get: function (t) { return t.summary.change_pct; }, pct: true },
+    { k: '1w', label: '1주', get: function (t) { return t.summary.returns['1w']; }, pct: true },
+    { k: '1m', label: '1개월', get: function (t) { return t.summary.returns['1m']; }, pct: true },
+    { k: '3m', label: '3개월', get: function (t) { return t.summary.returns['3m']; }, pct: true },
+    { k: '6m', label: '6개월', get: function (t) { return t.summary.returns['6m']; }, pct: true },
+    { k: '1y', label: '1년', get: function (t) { return t.summary.returns['1y']; }, pct: true },
+    { k: 'ytd', label: '연초 대비', get: function (t) { return t.summary.returns.ytd; }, pct: true },
+    { k: 'rsi', label: 'RSI(14)', get: function (t) { return t.summary.rsi14; }, fmt: function (v) { return v.toFixed(1); } },
+    { k: 'h52', label: '52주 고가 대비', get: function (t) { return t.summary.from_high52; }, pct: true },
+    { k: 'vol', label: '변동성', get: function (t) { return t.summary.vol60; }, fmt: function (v) { return (v * 100).toFixed(1) + '%'; } }
+  ];
+  var data = null, sel = null, range = '1y', sortKey = null, sortDir = -1, priceChart = null, rsiChart = null;
+
+  function $(id) { return document.getElementById(id); }
+  function el(tag, cls, text) { var e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; }
+  function store(k, v) { try { if (v === undefined) return localStorage.getItem(k); localStorage.setItem(k, v); } catch (e) { return null; } }
+  function usd(v) { return '$' + v.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
+  function cls(v) { return v > 0 ? 'up' : v < 0 ? 'down' : 'flat'; }
+  function arrow(v) { return v > 0 ? '▲ ' : v < 0 ? '▼ ' : ''; }
+  function pct(v) { return arrow(v) + (v > 0 ? '+' : '') + (v * 100).toFixed(2) + '%'; }
+  function md(iso) { return iso.slice(5, 7) + '.' + iso.slice(8, 10); }
+  function ymd(iso) { return iso.slice(0, 4) + '.' + iso.slice(5, 7) + '.' + iso.slice(8, 10); }
+  function cssVar(n) { return getComputedStyle(document.documentElement).getPropertyValue(n).trim(); }
+  function cur() { return data.tickers.filter(function (t) { return t.symbol === sel; })[0]; }
+
+  function monthsBack(iso, m) {
+    var y = +iso.slice(0, 4), mo = +iso.slice(5, 7) - 1 - m, d = +iso.slice(8, 10);
+    var first = new Date(Date.UTC(y, mo, 1));
+    var last = new Date(Date.UTC(first.getUTCFullYear(), first.getUTCMonth() + 1, 0)).getUTCDate();
+    first.setUTCDate(Math.min(d, last));
+    return first.toISOString().slice(0, 10);
+  }
+
+  function tile(k, v, s, c) {
+    var t = el('div', 'tile');
+    t.appendChild(el('div', 'k', k));
+    t.appendChild(el('div', 'v' + (c ? ' ' + c : ''), v));
+    if (s) t.appendChild(el('div', 's', s));
+    return t;
+  }
+
+  function renderChips() {
+    var box = $('chips'); box.textContent = '';
+    data.tickers.forEach(function (t) {
+      var b = el('button', 'chip', t.symbol);
+      b.type = 'button';
+      b.title = t.name;
+      b.setAttribute('aria-pressed', String(t.symbol === sel));
+      b.addEventListener('click', function () { select(t.symbol); });
+      box.appendChild(b);
+    });
+  }
+
+  function renderDetail() {
+    var t = cur(), s = t.summary;
+    $('d-sym').textContent = t.symbol;
+    $('d-name').textContent = t.name + ' · ' + t.name_en + ' · ' + t.exchange;
+    $('d-price').textContent = usd(s.close);
+    var chg = $('d-chg');
+    chg.className = 'chg ' + cls(s.change);
+    chg.textContent = '전일 대비 ' + arrow(s.change) + (s.change > 0 ? '+' : s.change < 0 ? '-' : '') + usd(Math.abs(s.change)).slice(1) + ' (' + (s.change_pct > 0 ? '+' : '') + (s.change_pct * 100).toFixed(2) + '%)';
+    $('d-prev').textContent = '기준일 ' + ymd(s.date) + ' 종가 · 전일 종가 ' + usd(s.prev_close);
+
+    var r = $('t-ret'); r.textContent = '';
+    RET.forEach(function (p) {
+      var v = s.returns[p[0]];
+      r.appendChild(tile(p[1] + ' 수익률', pct(v), '비교일 ' + ymd(s.return_base_dates[p[0]]), cls(v)));
+    });
+
+    var rsiState = s.rsi14 >= 70 ? '과매수 구간' : s.rsi14 <= 30 ? '과매도 구간' : '중립 구간';
+    var x = $('t-tech'); x.textContent = '';
+    x.appendChild(tile('RSI(14)', s.rsi14.toFixed(1), rsiState));
+    x.appendChild(tile('변동성', (s.vol60 * 100).toFixed(1) + '%', '60일 기준, 연환산'));
+    x.appendChild(tile('52주 고가 대비', pct(s.from_high52), '52주 고가 ' + usd(s.high52), cls(s.from_high52)));
+    x.appendChild(tile('52주 저가 대비', pct(s.from_low52), '52주 저가 ' + usd(s.low52), cls(s.from_low52)));
+    [['20', '20일'], ['60', '60일'], ['120', '120일']].forEach(function (m) {
+      x.appendChild(tile(m[1] + ' 이동평균 대비', pct(s.vs_ma[m[0]]), m[1] + ' 이동평균 ' + usd(s.ma[m[0]]), cls(s.vs_ma[m[0]])));
+    });
+  }
+
+  function renderRange() {
+    var box = $('range'); box.textContent = '';
+    RANGES.forEach(function (r) {
+      var b = el('button', null, r.label);
+      b.type = 'button';
+      b.setAttribute('aria-pressed', String(r.k === range));
+      b.addEventListener('click', function () { range = r.k; store('sd-range', range); renderRange(); renderCharts(); });
+      box.appendChild(b);
+    });
+  }
+
+  function baseOptions(labels) {
+    var grid = cssVar('--grid'), tx = cssVar('--text-2');
+    return {
+      responsive: true,
+      maintainAspectRatio: false,
+      animation: false,
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: cssVar('--surface'), titleColor: cssVar('--text'), bodyColor: cssVar('--text'),
+          borderColor: cssVar('--border'), borderWidth: 1, padding: 10, boxWidth: 10, boxHeight: 2,
+          callbacks: { title: function (items) { return ymd(labels[items[0].dataIndex]); } }
+        }
+      },
+      scales: {
+        x: {
+          grid: { display: false }, border: { color: grid },
+          ticks: { color: tx, maxRotation: 0, autoSkip: true, maxTicksLimit: 6, font: { size: 11 },
+            callback: function (v) { var d = labels[v]; return d.slice(2, 4) + '.' + d.slice(5, 7); } }
+        },
+        y: { position: 'right', grid: { color: grid }, border: { display: false }, ticks: { color: tx, font: { size: 11 }, maxTicksLimit: 6 } }
+      }
+    };
+  }
+
+  function line(label, values, color, width, dash) {
+    return { label: label, data: values, borderColor: color, backgroundColor: color, borderWidth: width, borderDash: dash || [],
+      pointRadius: 0, pointHoverRadius: 4, pointHitRadius: 12, tension: 0, spanGaps: false };
+  }
+
+  function renderCharts() {
+    var t = cur(), from = monthsBack(t.summary.date, RANGES.filter(function (r) { return r.k === range; })[0].months);
+    var i0 = 0;
+    while (i0 < t.dates.length && t.dates[i0] < from) i0++;
+    function cut(a) { return a.slice(i0); }
+    var labels = cut(t.dates);
+    $('c-title').textContent = t.symbol + ' 주가와 이동평균';
+
+    if (priceChart) priceChart.destroy();
+    var po = baseOptions(labels);
+    po.scales.y.ticks.callback = function (v) { return '$' + v.toLocaleString('en-US'); };
+    po.plugins.tooltip.callbacks.label = function (c) { return ' ' + c.dataset.label + '  ' + (c.parsed.y == null ? '-' : usd(c.parsed.y)); };
+    priceChart = new Chart($('cv-price'), {
+      type: 'line',
+      data: { labels: labels, datasets: [
+        line('종가', cut(t.close), cssVar('--s-close'), 2),
+        line('20일 이동평균', cut(t.ma20), cssVar('--s-ma20'), 1.5),
+        line('60일 이동평균', cut(t.ma60), cssVar('--s-ma60'), 1.5),
+        line('120일 이동평균', cut(t.ma120), cssVar('--s-ma120'), 1.5)
+      ] },
+      options: po
+    });
+
+    if (rsiChart) rsiChart.destroy();
+    var ro = baseOptions(labels), ref = cssVar('--text-3');
+    ro.scales.y.min = 0; ro.scales.y.max = 100;
+    ro.scales.y.afterBuildTicks = function (axis) { axis.ticks = [0, 30, 50, 70, 100].map(function (v) { return { value: v }; }); };
+    ro.plugins.tooltip.filter = function (c) { return c.datasetIndex === 0; };
+    ro.plugins.tooltip.callbacks.label = function (c) { return ' RSI(14)  ' + (c.parsed.y == null ? '-' : c.parsed.y.toFixed(1)); };
+    var flat = function (v) { return labels.map(function () { return v; }); };
+    var r70 = line('70', flat(70), ref, 1, [4, 4]), r30 = line('30', flat(30), ref, 1, [4, 4]);
+    r70.pointHoverRadius = r30.pointHoverRadius = 0;
+    rsiChart = new Chart($('cv-rsi'), {
+      type: 'line',
+      data: { labels: labels, datasets: [line('RSI(14)', cut(t.rsi14), cssVar('--s-ma20'), 2), r70, r30] },
+      options: ro
+    });
+  }
+
+  function renderTable() {
+    var head = $('thead'); head.textContent = '';
+    COLS.forEach(function (c) {
+      var th = el('th'), b = el('button', null, c.label + (sortKey === c.k ? (sortDir < 0 ? ' ▾' : ' ▴') : ''));
+      b.type = 'button';
+      th.setAttribute('aria-sort', sortKey === c.k ? (sortDir < 0 ? 'descending' : 'ascending') : 'none');
+      b.addEventListener('click', function () {
+        if (sortKey === c.k) sortDir = -sortDir; else { sortKey = c.k; sortDir = c.k === 'symbol' ? 1 : -1; }
+        renderTable();
+      });
+      th.appendChild(b); head.appendChild(th);
+    });
+    var rows = data.tickers.slice();
+    if (sortKey) {
+      var col = COLS.filter(function (c) { return c.k === sortKey; })[0];
+      rows.sort(function (a, b) { var x = col.get(a), y = col.get(b); return (x < y ? -1 : x > y ? 1 : 0) * sortDir; });
+    }
+    var body = $('tbody'); body.textContent = '';
+    rows.forEach(function (t) {
+      var tr = el('tr', t.symbol === sel ? 'sel' : null);
+      tr.tabIndex = 0;
+      COLS.forEach(function (c) {
+        var td = el('td'), v = c.get(t);
+        if (c.k === 'symbol') { td.appendChild(el('b', null, t.symbol)); td.appendChild(el('span', 'sub', t.name)); }
+        else if (c.pct) { td.textContent = pct(v); td.className = cls(v); }
+        else td.textContent = c.fmt(v);
+        tr.appendChild(td);
+      });
+      function go() { select(t.symbol); $('detail').scrollIntoView({ behavior: 'smooth', block: 'start' }); }
+      tr.addEventListener('click', go);
+      tr.addEventListener('keydown', function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); go(); } });
+      body.appendChild(tr);
+    });
+  }
+
+  function select(sym) {
+    sel = sym; store('sd-symbol', sym);
+    renderChips(); renderDetail(); renderCharts(); renderTable();
+  }
+
+  function init(d) {
+    data = d;
+    var saved = store('sd-symbol'), savedRange = store('sd-range');
+    sel = data.tickers.some(function (t) { return t.symbol === saved; }) ? saved : data.tickers[0].symbol;
+    if (RANGES.some(function (r) { return r.k === savedRange; })) range = savedRange;
+    var upd = new Date(data.updated_at).toLocaleString('ko-KR', { timeZone: 'Asia/Seoul', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hour12: false });
+    $('meta').textContent = '기준일 ' + ymd(data.as_of) + ' (미국 거래일) · 갱신 ' + upd + ' (한국 시간) · 출처 ' + data.source;
+    ['detail', 'charts', 'compare', 'glossary'].forEach(function (id) { $(id).hidden = false; });
+    renderRange();
+    select(sel);
+    if (window.matchMedia) {
+      var mq = window.matchMedia('(prefers-color-scheme: dark)');
+      var redraw = function () { renderCharts(); };
+      if (mq.addEventListener) mq.addEventListener('change', redraw); else if (mq.addListener) mq.addListener(redraw);
+    }
+  }
+
+  fetch('data/prices.json?t=' + Date.now())
+    .then(function (r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+    .then(init)
+    .catch(function (e) {
+      $('meta').textContent = '';
+      var box = $('err');
+      box.style.display = 'block';
+      box.textContent = '데이터를 불러오지 못했습니다. 잠시 후 새로고침해 주세요. (' + e.message + ')';
+    });
+})();
+</script>
+</body>
+</html>
