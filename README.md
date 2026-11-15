@@ -42,6 +42,15 @@ python3 -m http.server 8000
 
 기록은 쓰는 기기의 브라우저에만 저장되고 이 공개 저장소에는 올라가지 않습니다. 폰과 PC는 따로 저장되므로 "백업 파일 내보내기"로 받은 파일을 다른 기기에서 "백업 파일 불러오기"로 옮깁니다. 브라우저 데이터를 지우면 기록도 사라지니 주기적으로 백업해 두세요.
 
+## 백테스트
+
+`backtest/run_backtest.py`가 보유, 추세(20일선 > 60일선), RSI(30 매수, 70 매도, -10% 손절) 세 규칙을 같은 기간으로 시험하고 `backtest/results.json`에 저장합니다. `backtest/verify_backtest.py`가 다른 계산 방식으로 결과를 대조합니다. 규칙과 체결 가정은 `run_backtest.py` 상단 주석에 있습니다.
+
+```
+python3 backtest/run_backtest.py
+python3 backtest/verify_backtest.py
+```
+
 ## 유의 사항
 
 참고용 정보이며 투자 권유가 아닙니다. 수익률은 배당을 포함하지 않습니다. Yahoo Finance는 비공식 경로라 응답이 막히면 그날 갱신은 건너뛰고 기존 데이터를 유지합니다.
