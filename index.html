@@ -3,14 +3,15 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
-<title>네온 스핀 디펜스</title>
+<title>네온 잭팟</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;800&display=swap">
 <style>
-/* 레이아웃: 세로 한 화면. 위에서부터 상태 표시, 전장, 궤도포, 슬롯, 버튼 */
+/* 레이아웃: 세로 한 화면. 위에서부터 스테이지와 목표, 모듈, 슬롯판, 점수식, 버튼 */
 :root{
-  --bg:#07040f; --panel:#120a24; --line:#3a2a66; --fg:#e9e4ff; --dim:#9a8fc4;
-  --cyan:#29f0ff; --pink:#ff2bd6; --gold:#ffe14a; --red:#ff3b5c; --green:#39ff88;
+  --bg:#0a0616; --panel:#150d2b; --line:#3a2a66; --fg:#f1ecff; --dim:#a79cd0;
+  --cyan:#29f0ff; --pink:#ff2bd6; --gold:#ffd84a; --red:#ff4d6d; --green:#39ff88;
+  --r0:#56607f; --r1:#29f0ff; --r2:#ff2bd6; --r3:#ffd84a;
   --num:"Orbitron","Malgun Gothic","Apple SD Gothic Neo",sans-serif;
   --txt:"Apple SD Gothic Neo","Malgun Gothic","Noto Sans KR",system-ui,sans-serif;
   color-scheme:dark;
@@ -18,123 +19,135 @@
 *{box-sizing:border-box}
 [hidden]{display:none!important}
 html,body{height:100%}
-body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--txt);font-size:14px;
+body{margin:0;background:radial-gradient(120% 70% at 50% 0%,#24104a 0%,var(--bg) 60%);color:var(--fg);font-family:var(--txt);font-size:14px;
   padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));
   display:flex;justify-content:center;touch-action:manipulation;-webkit-user-select:none;user-select:none}
-#app{position:relative;width:100%;max-width:460px;height:100%;display:flex;flex-direction:column;gap:7px;padding-block:8px;min-height:0;justify-content:center}
-.hud{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
-.stat{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:3px 2px;text-align:center;min-width:0}
-.stat b{display:block;font-family:var(--num);font-size:15px;color:var(--cyan);font-variant-numeric:tabular-nums}
-.stat span{font-size:11px;color:var(--dim)}
-.stat.chips b{color:var(--gold)}
-.corebar{height:8px;background:#1c1233;border:1px solid var(--line);border-radius:5px;overflow:hidden}
-.corebar i{display:block;height:100%;width:100%;background:linear-gradient(90deg,var(--pink),var(--cyan));transition:width .2s}
-.fw{position:relative}
-#field{width:100%;aspect-ratio:200/130;max-width:100%;display:block;image-rendering:pixelated;cursor:crosshair;
-  border:1px solid var(--pink);border-radius:6px;box-shadow:0 0 14px rgba(255,43,214,.35);background:#0a0618}
-.fw.ready #field{border-color:var(--cyan);box-shadow:0 0 16px rgba(41,240,255,.8)}
-#banner{position:absolute;left:0;right:0;top:18%;text-align:center;font-family:var(--num);font-weight:800;font-size:24px;line-height:1.2;
-  color:var(--gold);text-shadow:0 0 10px var(--gold),0 2px 0 #000;pointer-events:none;animation:pop 1.3s ease-out forwards;word-break:keep-all;padding:0 8px}
-#banner.warn{color:var(--red);text-shadow:0 0 10px var(--red),0 2px 0 #000}
-#banner.wave{color:var(--cyan);text-shadow:0 0 10px var(--cyan),0 2px 0 #000}
-@keyframes pop{0%{transform:scale(.4);opacity:0}15%{transform:scale(1.15);opacity:1}30%{transform:scale(1)}80%{opacity:1}100%{opacity:0}}
-.strike{position:relative;overflow:hidden;background:#1c1233;border:1px solid var(--line);border-radius:6px;color:var(--fg);
-  font-size:12px;padding:6px 4px;cursor:pointer;text-align:center;line-height:1.3}
-.strike i{position:absolute;left:0;top:0;bottom:0;width:0;background:linear-gradient(90deg,#0d5f6b,#1aa9bb)}
-.strike span{position:relative;word-break:keep-all}
-.strike.ready{border-color:var(--cyan);color:#fff;font-weight:700;box-shadow:0 0 10px rgba(41,240,255,.6)}
-.slot{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:8px;display:flex;flex-direction:column;gap:6px}
-.reels{display:flex;justify-content:center;gap:10px}
-.reel{position:relative;flex:1;max-width:84px;background:#05030b;border:2px solid var(--cyan);border-radius:8px;padding:4px 4px 2px;
-  color:var(--fg);font-family:var(--txt);font-size:12px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:2px}
-.reel canvas{width:100%;aspect-ratio:1;image-rendering:pixelated;display:block}
-.reel.held{border-color:var(--gold);box-shadow:0 0 10px rgba(255,225,74,.6)}
-.reel.hot{border-color:var(--pink);box-shadow:0 0 14px rgba(255,43,214,.9)}
-.reel .tag{position:absolute;top:-8px;right:-6px;background:var(--gold);color:#201400;font-size:10px;font-weight:700;border-radius:4px;padding:1px 4px}
-#msg{min-height:2.6em;text-align:center;font-size:13px;line-height:1.3;color:var(--fg);word-break:keep-all;overflow-wrap:anywhere}
-#msg.jack{color:var(--gold);font-weight:700;text-shadow:0 0 8px rgba(255,225,74,.8)}
+#app{position:relative;width:100%;max-width:440px;height:100%;display:flex;flex-direction:column;justify-content:center;gap:10px;padding-block:10px;min-height:0}
+button{font-family:var(--txt);color:var(--fg)}
+.top{display:flex;justify-content:space-between;align-items:baseline;gap:8px;flex-wrap:wrap}
+.top b{font-family:var(--num);font-size:16px;color:var(--cyan)}
+.pips{display:flex;gap:5px;align-items:center;font-size:12px;color:var(--dim)}
+.pips i{width:11px;height:11px;border-radius:50%;background:var(--pink);box-shadow:0 0 6px var(--pink)}
+.pips i.off{background:#2a1f4a;box-shadow:none}
+.goal{position:relative;height:30px;background:#1a1036;border:1px solid var(--line);border-radius:8px;overflow:hidden}
+.goal i{position:absolute;inset:0 auto 0 0;width:0;background:linear-gradient(90deg,#a3128a,var(--pink));transition:width .35s}
+.goal span{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-family:var(--num);font-size:14px;font-variant-numeric:tabular-nums;text-shadow:0 1px 2px #000}
+.mods{display:flex;gap:6px;flex-wrap:wrap;min-height:30px;align-items:center}
+.mods .lbl{font-size:12px;color:var(--dim)}
+.mod{width:30px;height:30px;border-radius:8px;border:1px solid var(--gold);background:var(--panel);font-size:16px;padding:0;cursor:pointer}
+.grid{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;padding:8px;background:#0c0720;border:2px solid var(--pink);border-radius:14px;
+  box-shadow:0 0 22px rgba(255,43,214,.4),inset 0 0 18px rgba(41,240,255,.12)}
+.cell{position:relative;aspect-ratio:1;border-radius:10px;border:2px solid var(--r0);background:linear-gradient(160deg,#1d1340,#120a26);
+  display:flex;align-items:center;justify-content:center;font-size:clamp(24px,8.6vw,38px);line-height:1;cursor:pointer;padding:0;min-width:0}
+.cell.r1{border-color:var(--r1)}.cell.r2{border-color:var(--r2);box-shadow:0 0 8px rgba(255,43,214,.5)}.cell.r3{border-color:var(--r3);box-shadow:0 0 10px rgba(255,216,74,.7)}
+.cell.empty{border-style:dashed;border-color:#2a1f4a;background:none}
+.cell.roll{filter:blur(1px);opacity:.8}
+.cell.land{animation:land .28s ease-out}
+.cell.pop{animation:pop .3s ease-out}
+.cell.line{border-color:var(--gold);box-shadow:0 0 14px var(--gold);animation:pop .35s ease-out}
+.cell.pickable{outline:2px dashed var(--cyan);outline-offset:1px}
+.cell .v{position:absolute;right:2px;bottom:1px;font-family:var(--num);font-size:11px;color:var(--gold);text-shadow:0 0 4px #000,0 1px 0 #000;font-variant-numeric:tabular-nums}
+@keyframes land{0%{transform:translateY(-30%) scale(1.1)}60%{transform:translateY(6%)}100%{transform:none}}
+@keyframes pop{0%{transform:scale(1)}40%{transform:scale(1.22)}100%{transform:scale(1)}}
+.calc{display:flex;align-items:center;justify-content:center;gap:8px;flex-wrap:wrap;font-family:var(--num);font-variant-numeric:tabular-nums;min-height:44px}
+.calc .box{min-width:74px;text-align:center;border-radius:10px;padding:5px 8px;font-size:20px;font-weight:800}
+.calc .chips{background:#0d3d47;color:var(--cyan);border:1px solid var(--cyan)}
+.calc .mult{background:#4a0d3f;color:var(--pink);border:1px solid var(--pink)}
+.calc .x{font-size:16px;color:var(--dim)}
+.calc small{display:block;font-family:var(--txt);font-size:10px;font-weight:400;color:var(--dim)}
+.calc .bump{animation:pop .2s ease-out}
+#gain{font-family:var(--num);font-weight:800;font-size:26px;color:var(--gold);text-shadow:0 0 12px rgba(255,216,74,.8);text-align:center;min-height:32px}
+#gain.big{animation:pop .45s ease-out}
+#msg{min-height:2.7em;text-align:center;font-size:13px;line-height:1.35;color:var(--dim);word-break:keep-all;overflow-wrap:anywhere}
 .btns{display:flex;gap:6px}
-button{font-family:var(--txt)}
-.btn{background:var(--panel);border:1px solid var(--line);color:var(--fg);border-radius:8px;padding:10px 6px;font-size:13px;cursor:pointer;min-width:0}
-.btn:focus-visible,.reel:focus-visible,.card:focus-visible,.strike:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
-#spin{flex:1;background:linear-gradient(180deg,#ff2bd6,#a3128a);border:0;color:#fff;font-weight:800;font-size:17px;
-  box-shadow:0 0 12px rgba(255,43,214,.55);line-height:1.2}
+.btn{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:10px 6px;font-size:13px;cursor:pointer;min-width:0;line-height:1.25}
+.btn small{display:block;font-size:11px;color:var(--dim)}
+#spin{flex:1.6;background:linear-gradient(180deg,#ff2bd6,#a3128a);border:0;color:#fff;font-weight:800;font-size:18px;box-shadow:0 0 14px rgba(255,43,214,.6)}
+#spin.score{background:linear-gradient(180deg,#ffd84a,#c98a00);color:#2a1a00;box-shadow:0 0 14px rgba(255,216,74,.6)}
 #spin:active{transform:scale(.96)}
-#spin small{display:block;font-size:11px;font-weight:400;opacity:.9}
-#spin:disabled{filter:grayscale(.7);opacity:.6}
-.legend{flex:none;display:grid;text-align:left;grid-template-columns:1fr 1fr;gap:6px;align-content:start}
-.leg{display:flex;gap:6px;align-items:flex-start;background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:6px;min-width:0}
-.leg canvas{width:28px;height:28px;flex:none;image-rendering:pixelated}
-.leg div{min-width:0;font-size:11px;line-height:1.35;color:var(--dim);word-break:keep-all;overflow-wrap:anywhere}
-.leg b{display:block;color:var(--fg);font-size:12px}
-.ov{position:absolute;inset:0;background:rgba(7,4,15,.93);display:flex;flex-direction:column;justify-content:center;align-items:stretch;
-  gap:10px;padding:16px 8px;z-index:5;overflow-y:auto;text-align:center}
-#ovHelp{justify-content:flex-start}
-.ov h1{font-family:var(--num);font-size:26px;margin:0;color:var(--cyan);text-shadow:0 0 12px var(--cyan);line-height:1.25;text-wrap:balance}
-.ov h1 em{font-style:normal;color:var(--pink);text-shadow:0 0 12px var(--pink)}
+#spin:disabled{filter:grayscale(.7);opacity:.55}
+.btn:focus-visible,.cell:focus-visible,.card:focus-visible,.mod:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+.ov{position:absolute;inset:0;background:rgba(10,6,22,.95);display:flex;flex-direction:column;justify-content:flex-start;align-items:stretch;
+  gap:10px;padding:16px 4px;z-index:5;overflow-y:auto;text-align:center}
+.ov.mid{justify-content:center}
+.ov h1{font-family:var(--num);font-size:30px;margin:0;color:var(--gold);text-shadow:0 0 14px rgba(255,216,74,.8);line-height:1.2;text-wrap:balance}
+.ov h1 em{font-style:normal;color:var(--pink);text-shadow:0 0 14px var(--pink)}
 .ov h2{font-size:18px;margin:0;color:var(--gold);text-wrap:balance}
 .ov p{margin:0;color:var(--dim);line-height:1.5;font-size:13px;word-break:keep-all}
-.ov ul{margin:0;padding-left:18px;text-align:left;color:var(--fg);font-size:13px;line-height:1.6;word-break:keep-all}
-.card{background:var(--panel);border:1px solid var(--cyan);border-radius:8px;padding:12px 10px;color:var(--fg);cursor:pointer;text-align:left}
-.card b{display:block;color:var(--cyan);font-size:15px;margin-bottom:2px}
-.card span{font-size:13px;color:var(--dim);line-height:1.4;word-break:keep-all}
-.big{background:linear-gradient(180deg,#29f0ff,#0d8fa0);color:#03222a;border:0;border-radius:8px;padding:14px;font-size:17px;font-weight:800;cursor:pointer}
-@media (prefers-reduced-motion:reduce){.corebar i{transition:none}#banner{animation:none}}
+.ov ul{margin:0;padding-left:18px;text-align:left;font-size:13px;line-height:1.6;word-break:keep-all}
+.cards{display:flex;flex-direction:column;gap:8px}
+.card{display:flex;gap:10px;align-items:center;background:var(--panel);border:2px solid var(--r0);border-radius:12px;padding:10px;cursor:pointer;text-align:left;min-width:0}
+.card.r1{border-color:var(--r1)}.card.r2{border-color:var(--r2)}.card.r3{border-color:var(--r3);box-shadow:0 0 12px rgba(255,216,74,.5)}
+.card .e{font-size:34px;flex:none;width:44px;text-align:center}
+.card div{min-width:0}
+.card b{display:block;font-size:15px}
+.card b i{font-style:normal;font-size:11px;font-weight:400;color:var(--dim);margin-left:6px}
+.card span{display:block;font-size:13px;color:var(--dim);line-height:1.4;word-break:keep-all;overflow-wrap:anywhere}
+.card .rm{flex:none;margin-left:auto;background:#4a0d1c;border:1px solid var(--red);border-radius:8px;padding:6px 8px;font-size:12px;cursor:pointer}
+.big{background:linear-gradient(180deg,#ffd84a,#c98a00);color:#2a1a00;border:0;border-radius:10px;padding:14px;font-size:17px;font-weight:800;cursor:pointer}
+.ghost{background:none;border:1px solid var(--line);border-radius:10px;padding:11px;font-size:14px;cursor:pointer}
+@media (prefers-reduced-motion:reduce){.cell.land,.cell.pop,.cell.line,#gain.big,.calc .bump{animation:none}.goal i{transition:none}}
 </style>
 </head>
 <body>
 <div id="app">
-  <div class="hud">
-    <div class="stat"><b id="hWave">1/20</b><span>웨이브</span></div>
-    <div class="stat"><b id="hCore">100</b><span>코어</span></div>
-    <div class="stat chips"><b id="hChips">20</b><span>칩</span></div>
-    <div class="stat"><b id="hPop">0/6</b><span>유닛</span></div>
+  <div class="top">
+    <b id="hStage">STAGE 1</b>
+    <div class="pips" id="pips"></div>
   </div>
-  <div class="corebar"><i id="coreFill"></i></div>
-  <div class="fw" id="fw"><canvas id="field" width="400" height="260"></canvas><div id="banner" hidden></div></div>
-  <button class="strike" id="strike" type="button"><i id="strikeFill"></i><span id="strikeTxt">궤도포 충전 0%</span></button>
-  <div class="slot">
-    <div class="reels" id="reels"></div>
-    <div id="msg">스핀을 눌러 유닛을 뽑으세요</div>
+  <div class="goal"><i id="goalFill"></i><span id="goalTxt">목표 0 / 0</span></div>
+  <div class="mods" id="mods"></div>
+  <div class="grid" id="grid"></div>
+  <div class="calc">
+    <div class="box chips" id="bChips">0<small>칩</small></div><span class="x">×</span>
+    <div class="box mult" id="bMult">1<small>배수</small></div>
   </div>
+  <div id="gain"></div>
+  <div id="msg"></div>
   <div class="btns">
-    <button class="btn" id="spin" type="button">스핀<small id="spinCost">칩 5</small></button>
-    <button class="btn" id="speed" type="button">속도 x1</button>
-    <button class="btn" id="mute" type="button">소리 켬</button>
-    <button class="btn" id="help" type="button">도움말</button>
+    <button class="btn" id="spin" type="button">스핀</button>
+    <button class="btn" id="deckBtn" type="button">내 심볼<small id="deckSub">8개</small></button>
+    <button class="btn" id="help" type="button">도움말<small id="muteSub">소리 켬</small></button>
   </div>
 
-  <div class="ov" id="ovTitle">
-    <h1>NEON <em>SPIN</em><br>DEFENSE</h1>
-    <p>2099년 네온 시티. 슬롯을 돌려 유닛을 뽑고<br>폭주한 기계들로부터 코어를 지키세요.</p>
+  <div class="ov mid" id="ovTitle">
+    <h1>NEON<br><em>JACKPOT</em></h1>
+    <p>심볼을 모아 나만의 슬롯을 만드세요.<br>심볼끼리 엮일수록 점수가 불어납니다.<br>스테이지마다 목표 점수를 넘겨야 살아남습니다.</p>
     <p id="bestLine"></p>
     <button class="big" id="start" type="button">게임 시작</button>
-    <button class="btn" id="help2" type="button">도움말</button>
+    <button class="ghost" id="help2" type="button">도움말</button>
   </div>
-  <div class="ov" id="ovPick" hidden>
-    <h2 id="pickTitle">웨이브 클리어</h2>
-    <p>임플란트를 하나 고르세요</p>
-    <div id="picks" style="display:flex;flex-direction:column;gap:8px"></div>
+  <div class="ov mid" id="ovPick" hidden>
+    <h2 id="pickTitle">심볼을 하나 추가하세요</h2>
+    <p id="pickSub"></p>
+    <div class="cards" id="picks"></div>
+    <button class="ghost" id="skip" type="button">건너뛰기</button>
   </div>
-  <div class="ov" id="ovEnd" hidden>
+  <div class="ov" id="ovDeck" hidden>
+    <h2>내 심볼</h2>
+    <p id="deckInfo"></p>
+    <div class="cards" id="deckList"></div>
+    <button class="big" id="deckClose" type="button">닫기</button>
+  </div>
+  <div class="ov mid" id="ovEnd" hidden>
     <h2 id="endTitle"></h2>
     <p id="endText"></p>
-    <button class="big" id="again" type="button">다시 시작</button>
+    <button class="big" id="again" type="button">새 게임</button>
+    <button class="ghost" id="cont" type="button" hidden>계속 도전</button>
   </div>
   <div class="ov" id="ovHelp" hidden>
     <h2>게임 방법</h2>
     <ul>
-      <li>스핀을 누르면 칩을 쓰고 릴 3개가 돌아갑니다. 나온 심볼의 유닛이 소환됩니다.</li>
-      <li>같은 심볼 2개는 2레벨 유닛, 3개는 잭팟입니다. 잭팟은 3레벨 유닛이 나오고 모든 유닛이 6초 동안 오버클럭(공격 속도 증가) 됩니다.</li>
-      <li>와일드(7)는 어떤 심볼과도 짝이 됩니다. 와일드 3개는 메가 잭팟으로, 화면의 적 전체에 큰 피해를 줍니다.</li>
-      <li>칩 심볼은 유닛 대신 칩을 줍니다.</li>
-      <li>궤도포는 적을 처치하면 충전됩니다. 다 차면 전장의 원하는 곳을 눌러 발사합니다.</li>
-      <li>릴을 누르면 홀드됩니다. 홀드한 릴은 다음 스핀에 그대로 남고, 홀드 하나당 칩이 더 듭니다. 최대 2개까지 됩니다.</li>
-      <li>유닛 정원이 차면 새 유닛은 같은 종류 유닛을 강화합니다. 같은 종류가 없으면 가장 약한 유닛을 강화합니다. 유닛 머리 위 숫자가 전투력입니다.</li>
-      <li>블레이드와 실드봇은 공중의 드론을 때릴 수 없습니다.</li>
-      <li>웨이브를 막을 때마다 임플란트를 하나 고릅니다. 20웨이브를 버티면 승리입니다.</li>
+      <li>스핀을 누르면 내 심볼 중 최대 15개가 슬롯판에 무작위로 깔립니다.</li>
+      <li>점수는 칩 × 배수입니다. 칩은 심볼 값의 합이고, 심볼끼리 붙어 있거나 같은 줄에 있으면 서로 값을 올려 줍니다.</li>
+      <li>가로로 같은 심볼이 3개 이어지면 배수 2배, 4개면 3배, 5개면 5배입니다. 여러 줄이 맞으면 계속 곱해집니다.</li>
+      <li>정산 전에 세로줄을 누르면 그 줄만 다시 돌립니다. 재스핀 횟수는 스테이지마다 채워집니다.</li>
+      <li>스핀이 끝날 때마다 심볼 3개 중 하나를 추가할 수 있습니다. 필요 없으면 건너뛰세요. 심볼이 15개를 넘으면 좋은 심볼이 안 나올 수 있습니다.</li>
+      <li>스핀을 다 쓰기 전에 목표 점수를 넘기면 스테이지 클리어입니다. 남은 스핀 하나당 제거권을 하나 받고, 모듈을 하나 고릅니다.</li>
+      <li>제거권은 내 심볼 화면에서 쓸모없는 심볼을 없애는 데 씁니다.</li>
+      <li>10스테이지를 넘기면 승리입니다.</li>
     </ul>
-    <div class="legend" id="legend"></div>
+    <button class="ghost" id="mute" type="button">소리 끄기</button>
     <button class="big" id="helpClose" type="button">닫기</button>
   </div>
 </div>
@@ -142,453 +155,346 @@ button{font-family:var(--txt)}
 (function(){
 'use strict';
 const $=id=>document.getElementById(id);
-const rnd=(a,b)=>a+Math.random()*(b-a);
-const PAL={k:'#0b0b14',w:'#ffffff',c:'#29f0ff',m:'#ff2bd6',y:'#ffe14a',r:'#ff3b5c',g:'#39ff88',p:'#8a5cff',s:'#f2c9a0',d:'#3a3f5c',l:'#a9b4d0',o:'#ff9a3c',b:'#3c7bff'};
-function mk(rows,swap){
-  const h=rows.length,w=Math.max.apply(null,rows.map(r=>r.length));
-  const c=document.createElement('canvas');c.width=w;c.height=h;const x=c.getContext('2d');
-  rows.forEach((r,j)=>{for(let i=0;i<r.length;i++){let ch=r[i];if(ch==='.')continue;if(swap&&swap[ch])ch=swap[ch];x.fillStyle=PAL[ch];x.fillRect(i,j,1,1);}});
-  return c;
-}
-function white(spr){
-  const c=document.createElement('canvas');c.width=spr.width;c.height=spr.height;const x=c.getContext('2d');
-  x.drawImage(spr,0,0);x.globalCompositeOperation='source-in';x.fillStyle='#fff';x.fillRect(0,0,c.width,c.height);return c;
-}
-const HEAVY=["....oooooo....","...oooooooo...","...owwoowwo...","...oooooooo...",".dddoooooddd..","dddoooooooddd.","dd.oooyyoo.dd.","dd.oooyyoo.dd.","dd.oooooooo.dd","...oooooooo...","...ddd..ddd...","...ddd..ddd...","..dddd..dddd..","..kkkk..kkkk.."];
-const SPR={
-  blade:mk(["...mmm....","..mmmmm...","..kccck..w","..ksssk..w","...kkk..w.",".dmmmmd.w.","dmmkmmmdw.","d.mmmm.sw.","..mmmm....","..dd.dd...","..dd.dd...","..kk.kk..."]),
-  gunner:mk(["...ccc....","..ccccc...","..kyyyk...","..ksssk...","...kkk....",".dbbbbd...","dbbbbsllll","d.bbbb.d..","..bbbb....","..dd.dd...","..dd.dd...","..kk.kk..."]),
-  hacker:mk(["...ggg....","..ggggg...",".ggkkkgg..",".gkgkgkg..",".ggkkkgg..","..ggggg...",".gdgggdg..",".g.lll.g..","..lgggl...","..dd.dd...","..dd.dd...","..kk.kk..."]),
-  shield:mk(["..llll....",".lcccll...",".llllll.pp","..dddd.pcp",".llllllpcp","lllllllpcp","l.llll.pcp","l.llll.pcp","..llll..pp","..dd.dd...",".ddd.ddd..",".kkk.kkk.."]),
-  chip:mk(["..........","..yyyyyy..",".yyooooyy.",".yoyyyyoy.",".yoyooyoy.",".yoyooyoy.",".yoyyyyoy.",".yyooooyy.","..yyyyyy..",".........."]),
-  wild:mk(["..........",".mmmmmmmm.",".mccccccm.",".mmmmmccm.","....mccm..","...mccm...","..mccm....","..mccm....","..mmmm....",".........."]),
-  glitch:mk(["..rrrr....",".rrrrrr...",".rwkrwkr..",".rrrrrr...","..rkkr....",".rrrrrr...","r.rrrr.r..","r.rrrr.r..","..r..r....","..k..k...."]),
-  runner:mk(["mm........","mwm...m...","mmmmmmmm..",".mmmmmmm..",".mmmmmm...",".m.m.m.m..",".k.k.k.k.."]),
-  drone:mk(["pp......pp",".pp.dd.pp.","..pppppp..",".prwppppp.","..pppppp..","...d..d..."]),
-  heavy:mk(HEAVY),
-  boss:mk(HEAVY,{o:'r',y:'c',d:'p'})
+const RN=['일반','고급','희귀','전설'];
+const SYM={
+  coin:{e:'🪙',n:'동전',r:0,v:1,d:'칩 1.'},
+  bill:{e:'💵',n:'지폐',r:0,v:2,d:'칩 2.'},
+  cat:{e:'🐱',n:'고양이',r:0,v:1,d:'칩 1. 붙어 있는 우유 하나당 +4, 쥐 하나당 +6.'},
+  milk:{e:'🥛',n:'우유',r:0,v:1,d:'칩 1. 고양이 옆에 두면 좋습니다.'},
+  mouse:{e:'🐭',n:'쥐',r:0,v:1,d:'칩 1. 붙어 있는 치즈 하나당 +5.'},
+  cheese:{e:'🧀',n:'치즈',r:0,v:2,d:'칩 2. 쥐 옆에 두면 좋습니다.'},
+  dice:{e:'🎲',n:'주사위',r:0,v:0,d:'깔릴 때마다 칩 1에서 6 사이로 정해집니다.'},
+  seed:{e:'🌱',n:'씨앗',r:0,v:1,d:'칩 1. 정산될 때마다 값이 영구히 +2 자랍니다.'},
+  fire:{e:'🔥',n:'불꽃',r:1,v:2,d:'칩 2. 같은 가로줄의 다른 심볼 값을 +1.'},
+  bomb:{e:'💣',n:'폭탄',r:1,v:0,d:'칩 0. 붙어 있는 심볼의 값을 2배로.'},
+  clover:{e:'🍀',n:'클로버',r:1,v:1,d:'칩 1. 배수 +1.'},
+  star:{e:'⭐',n:'별',r:1,v:3,d:'칩 3. 네 모서리 칸에 깔리면 값이 3배.'},
+  robot:{e:'🤖',n:'로봇',r:1,v:2,d:'칩 2. 슬롯판의 빈 칸 하나당 +2.'},
+  ghost:{e:'👻',n:'유령',r:1,v:4,d:'칩 4. 붙어 있는 빈 칸 하나당 +2.'},
+  bolt:{e:'⚡',n:'번개',r:1,v:0,d:'칩 0. 같은 세로줄의 다른 심볼 값을 2배로.'},
+  magnet:{e:'🧲',n:'자석',r:1,v:1,d:'칩 1. 같은 가로줄의 동전과 지폐 값을 3배로.'},
+  vault:{e:'🏦',n:'금고',r:2,v:0,d:'슬롯판의 동전과 지폐 하나당 +2.'},
+  diamond:{e:'💎',n:'다이아',r:2,v:5,d:'칩 5. 붙어 있는 다이아 하나당 +5.'},
+  seven:{e:'7️⃣',n:'세븐',r:2,v:7,d:'칩 7. 슬롯판에 세븐이 3개 이상이면 배수 3배.'},
+  pig:{e:'🐷',n:'돼지저금통',r:2,v:3,d:'칩 3. 정산될 때마다 값이 영구히 +3 자랍니다.'},
+  crown:{e:'👑',n:'왕관',r:3,v:10,d:'칩 10. 붙어 있는 모든 심볼 값을 +3.'},
+  alien:{e:'👽',n:'외계인',r:3,v:0,d:'칩 0. 배수 2배.'},
+  rainbow:{e:'🌈',n:'무지개',r:3,v:0,d:'배수 +2. 줄을 맞출 때 어떤 심볼로도 쳐 줍니다.'}
 };
-const WSPR={};['glitch','runner','drone','heavy','boss'].forEach(k=>WSPR[k]=white(SPR[k]));
-const UT={
-  blade:{name:'블레이드',hp:70,dmg:9,cd:0.6,range:13,spd:30,melee:true,rally:106,desc:'근접 공격수. 앞줄에서 빠르게 벱니다.'},
-  gunner:{name:'거너',hp:32,dmg:8,cd:0.8,range:72,spd:26,rally:66,desc:'원거리 사격. 드론도 맞힙니다.'},
-  hacker:{name:'해커',hp:26,dmg:4,cd:1.2,range:64,spd:26,rally:50,multi:3,desc:'적 3기를 한꺼번에 감전시키고 느리게 만듭니다.'},
-  shield:{name:'실드봇',hp:160,dmg:4,cd:1.0,range:13,spd:24,melee:true,rally:122,desc:'체력이 높은 방패 역할.'}
+const MOD={
+  mult:{e:'✖️',n:'고배율 회로',d:'기본 배수 +2.'},
+  over:{e:'💥',n:'과부하',d:'최종 배수 1.5배.'},
+  grow:{e:'📈',n:'복리 장치',d:'지금 바로, 그리고 스테이지를 넘길 때마다 기본 배수 +1.'},
+  respin:{e:'🔄',n:'재스핀 탱크',d:'스테이지마다 재스핀 +2.'},
+  coin:{e:'⚒️',n:'동전 세공',d:'동전 값 +2.'},
+  radar:{e:'📡',n:'희귀 탐지기',d:'희귀와 전설 심볼이 2배 자주 나옵니다.'},
+  line:{e:'📏',n:'줄타기 명수',d:'줄을 맞출 때 곱해지는 배수가 1씩 더 큽니다.'},
+  spin:{e:'➕',n:'추가 스핀',d:'스테이지마다 스핀 +1.'},
+  empty:{e:'🕳️',n:'빈칸 수집가',d:'슬롯판의 빈 칸 하나당 칩 +2.'},
+  corner:{e:'📐',n:'모서리 조명',d:'네 모서리 칸의 심볼 값이 2배.'},
+  top:{e:'🔝',n:'윗줄 프리미엄',d:'맨 윗줄 심볼 값 +2.'},
+  pre:{e:'🎁',n:'선불 계약',d:'스테이지를 시작할 때 목표의 15%를 미리 채웁니다.'},
+  cut:{e:'✂️',n:'정리 전문가',d:'스테이지를 넘길 때마다 제거권 +1.'},
+  seven:{e:'🎰',n:'럭키 세븐',d:'세븐 값 +7.'}
 };
-const SYMS=['blade','gunner','hacker','shield','chip','wild'];
-const UNITS=['blade','gunner','hacker','shield'];
-const WEIGHT={blade:22,gunner:22,hacker:17,shield:17,chip:16,wild:6};
-const SNAME={blade:'블레이드',gunner:'거너',hacker:'해커',shield:'실드봇',chip:'칩',wild:'와일드'};
-const LV=[0,1,2.4,6], CHIPPAY=[0,3,8,30];
-const CFG={hpA:2,hpG:1.12,dmgG:1.06,hpB:4,rw:1};
-const ET={
-  glitch:{hp:22,dmg:6,cd:0.9,range:12,spd:15,reward:3},
-  runner:{hp:13,dmg:5,cd:0.6,range:11,spd:32,reward:3},
-  drone:{hp:18,dmg:6,cd:1.3,range:58,spd:17,reward:5,fly:true},
-  heavy:{hp:95,dmg:16,cd:1.4,range:14,spd:9,reward:9,bar:22},
-  boss:{hp:400,dmg:30,cd:1.5,range:22,spd:7,reward:60,scale:4,bar:44}
-};
-const MAXWAVE=20, CORE_X=22, GROUND=114, W=200, H=130;
-const IMPLANTS=[
-  {n:'과부하 코일',d:'모든 유닛 공격력 +20%',f:m=>m.dmg*=1.2},
-  {n:'반응 가속기',d:'모든 유닛 공격 속도 +15%',f:m=>m.aspd*=1.15},
-  {n:'나노 수리',d:'코어 내구도 40 회복',f:(m,S)=>S.coreHp=Math.min(S.coreMax,S.coreHp+40),ok:S=>S.coreHp<S.coreMax},
-  {n:'강화 장갑',d:'코어 최대 내구도 +30, 내구도 30 회복',f:(m,S)=>{S.coreMax+=30;S.coreHp+=30;}},
-  {n:'암시장 할인',d:'스핀 비용 -1',f:m=>m.spinCost-=1,ok:S=>S.mods.spinCost>4},
-  {n:'현상금',d:'처치 보상 +25%',f:m=>m.reward*=1.25},
-  {n:'확장 슬롯',d:'유닛 정원 +1',f:(m,S)=>S.pop+=1,ok:S=>S.pop<10},
-  {n:'골드 칩',d:'칩 심볼 보상 +20%',f:m=>m.chip+=0.2,ok:S=>S.mods.chip<1.35},
-  {n:'홀드 해킹',d:'홀드 비용 -1',f:m=>m.holdCost-=1,ok:S=>S.mods.holdCost>2},
-  {n:'코어 포탑 강화',d:'코어 포탑 공격력 2배',f:m=>m.turret*=2},
-  {n:'궤도포 증폭',d:'궤도포 피해 +50%',f:m=>m.strike*=1.5},
-  {n:'고속 충전',d:'궤도포 충전 속도 +40%',f:m=>m.charge*=1.4},
-  {n:'블레이드 특화',d:'블레이드 공격력 +35%',f:m=>m.type.blade*=1.35},
-  {n:'거너 특화',d:'거너 공격력 +35%',f:m=>m.type.gunner*=1.35},
-  {n:'해커 특화',d:'해커 공격력 +35%',f:m=>m.type.hacker*=1.35},
-  {n:'실드봇 특화',d:'실드봇 공격력 +35%',f:m=>m.type.shield*=1.35}
-];
-let S=null, held=[false,false,false], spinAnim=null, muted=false, AC=null, best=0;
-try{best=parseInt(localStorage.getItem('neonspin_best'),10)||0;}catch(e){}
-
+const COLS=5,ROWS=3,N=15,CORNERS=[0,4,10,14],WIN=10;
+const QUOTA=[0,80,180,380,700,1200,2000,3000,4400,6200,8500];
+function quota(s){return s<=10?QUOTA[s]:Math.round(8500*Math.pow(1.45,s-10)/100)*100;}
+function adj(i){const r=Math.floor(i/COLS),c=i%COLS,o=[];
+  for(let dr=-1;dr<=1;dr++)for(let dc=-1;dc<=1;dc++){if(!dr&&!dc)continue;const rr=r+dr,cc=c+dc;if(rr>=0&&rr<ROWS&&cc>=0&&cc<COLS)o.push(rr*COLS+cc);}return o;}
+const ADJ=[];for(let i=0;i<N;i++)ADJ.push(adj(i));
+let S=null,best=0,muted=false,AC=null,fast=false,busy=false;
+try{best=parseInt(localStorage.getItem('neonjackpot_best'),10)||0;}catch(e){}
 function beep(f,d,type,v,delay){
   if(muted||!AC)return;
   try{const t=AC.currentTime+(delay||0),o=AC.createOscillator(),g=AC.createGain();
     o.type=type||'square';o.frequency.value=f;g.gain.setValueAtTime(v||0.04,t);g.gain.exponentialRampToValueAtTime(0.0001,t+d);
     o.connect(g);g.connect(AC.destination);o.start(t);o.stop(t+d);}catch(e){}
 }
-function newState(){
-  return {state:'play',wave:0,waveT:0,queue:[],chips:20,coreHp:100,coreMax:100,pop:6,units:[],enemies:[],fx:[],lines:[],floats:[],strikes:[],beams:[],
-    t:0,speed:1,turretCd:0,overclock:0,flash:0,shake:0,hurt:0,energy:0,reels:[rollSym(),rollSym(),rollSym()],
-    mods:{dmg:1,aspd:1,reward:1,chip:1,spinCost:5,holdCost:4,turret:1,strike:1,charge:1,type:{blade:1,gunner:1,hacker:1,shield:1}}};
-}
-function rollSym(){
-  let r=Math.random()*100;
-  for(const s of SYMS){r-=WEIGHT[s];if(r<0)return s;}
-  return 'chip';
-}
-function hpMult(w){return CFG.hpB*(1+CFG.hpA*(w-1))*Math.pow(CFG.hpG,w-1);}
-function uMul(u){return LV[u.lv]+0.15*u.boost;}
-function uMax(u){return UT[u.type].hp*uMul(u);}
-function uDmg(u){return UT[u.type].dmg*uMul(u)*S.mods.dmg*S.mods.type[u.type];}
-function spinCost(){return S.mods.spinCost+held.filter(Boolean).length*S.mods.holdCost;}
-function float(x,y,txt,c,size){S.floats.push({x:x,y:y,txt:txt,c:c,life:.8,size:size||7});}
-let bannerT=null;
-function banner(txt,cls){
-  const b=$('banner');if(!b)return;
-  b.hidden=true;void b.offsetWidth;b.textContent=txt;b.className=cls||'';b.hidden=false;
-  clearTimeout(bannerT);bannerT=setTimeout(()=>{b.hidden=true;},1300);
-}
+const mk=id=>({id:id,grow:0,roll:0});
+const has=m=>S.mods.indexOf(m)>=0;
 
-function buildWave(w){
-  const q=[],boss=w%5===0;let n=6+w*2;if(boss)n=Math.floor(n*0.6);
-  let t=1;const gap=Math.max(0.4,1.3-w*0.04);
-  for(let i=0;i<n;i++){
-    const r=Math.random();let type='glitch';
-    if(w>=6&&r<0.12)type='heavy';else if(w>=4&&r<0.27)type='drone';else if(w>=2&&r<0.5)type='runner';
-    q.push({t:t,type:type});t+=gap*rnd(0.6,1.4);
+/* ---------- 규칙 (화면과 분리) ---------- */
+function newRun(){
+  S={bonusMult:0,stage:1,total:0,spins:0,respins:0,removes:0,mods:[],phase:'idle',board:new Array(N).fill(null),res:null,cleared:false,endless:false,
+    deck:['coin','coin','coin','coin','bill','cat','milk','dice'].map(mk)};
+  beginStage();
+}
+function beginStage(){
+  S.spins=5+(has('spin')?1:0);S.respins=2+(has('respin')?2:0);S.cleared=false;
+  S.total=has('pre')?Math.round(quota(S.stage)*0.15):0;S.phase='idle';
+}
+function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));const t=a[i];a[i]=a[j];a[j]=t;}return a;}
+function place(t){if(t&&t.id==='dice')t.roll=1+Math.floor(Math.random()*6);return t;}
+function draw(){
+  const d=shuffle(S.deck.slice()).slice(0,N);while(d.length<N)d.push(null);
+  S.board=shuffle(d).map(place);S.phase='adjust';S.res=calc(S.board);
+}
+function respinCol(c){
+  if(S.phase!=='adjust'||S.respins<=0)return false;
+  const idx=[c,c+COLS,c+2*COLS],on=S.board.filter(Boolean);
+  const pool=S.deck.filter(t=>on.indexOf(t)<0);
+  idx.forEach(i=>{if(S.board[i])pool.push(S.board[i]);});
+  while(pool.length<3)pool.push(null);
+  shuffle(pool);idx.forEach((i,k)=>{S.board[i]=place(pool[k]);});
+  S.respins--;S.res=calc(S.board);return true;
+}
+function calc(B){
+  const v=new Array(N).fill(0),m=new Array(N).fill(1),id=i=>B[i]?B[i].id:null;
+  let money=0,empties=0,sevens=0,clovers=0,rainbows=0,aliens=0;
+  for(let i=0;i<N;i++){const t=id(i);if(!t){empties++;continue;}
+    if(t==='coin'||t==='bill')money++;if(t==='seven')sevens++;if(t==='clover')clovers++;if(t==='rainbow')rainbows++;if(t==='alien')aliens++;}
+  const cnt=(i,f)=>ADJ[i].filter(j=>f(id(j))).length;
+  for(let i=0;i<N;i++){
+    const t=id(i);if(!t)continue;let x=SYM[t].v;
+    if(t==='dice')x=B[i].roll;if(t==='seed')x=1+2*B[i].grow;if(t==='pig')x=3+3*B[i].grow;
+    if(t==='coin'&&has('coin'))x+=2;if(t==='seven'&&has('seven'))x+=7;if(i<COLS&&has('top'))x+=2;
+    if(t==='cat')x+=4*cnt(i,s=>s==='milk')+6*cnt(i,s=>s==='mouse');
+    if(t==='mouse')x+=5*cnt(i,s=>s==='cheese');
+    if(t==='vault')x+=2*money;
+    if(t==='diamond')x+=5*cnt(i,s=>s==='diamond');
+    if(t==='robot')x+=2*empties;
+    if(t==='ghost')x+=2*cnt(i,s=>s===null);
+    v[i]=x;
   }
-  if(boss)q.push({t:t*0.5,type:'boss'});
-  q.sort((a,b)=>a.t-b.t);return q;
-}
-function startWave(w){
-  S.wave=w;S.waveT=0;S.queue=buildWave(w);S.state='play';
-  if(w%5===0){banner('경고! 보스 출현','warn');beep(180,.25,'sawtooth',.05);beep(180,.25,'sawtooth',.05,.35);}
-  else banner('WAVE '+w,'wave');
-}
-function spawnEnemy(type){
-  const d=ET[type],w=S.wave,hs=hpMult(w),ds=Math.pow(CFG.dmgG,w-1);
-  S.enemies.push({type:type,x:W+8,y:d.fly?rnd(70,84):GROUND+rnd(-3,3),hp:d.hp*hs,max:d.hp*hs,dmg:d.dmg*ds,
-    reward:type==='boss'?20+2*w:d.reward*(24+2*w)/(3.5*(6+2*w)),cd:rnd(0,d.cd),slow:0,hit:0});
-}
-function summon(type,lv,notes){
-  if(S.units.length<S.pop){
-    const u={type:type,lv:lv,boost:0,x:CORE_X+rnd(-2,4),y:GROUND+rnd(-3,3),cd:0,home:UT[type].rally+rnd(-10,10)};
-    u.hp=uMax(u);S.units.push(u);burst(u.x,u.y-10,PAL.c,8);
-    notes.push(SNAME[type]+' '+lv+'레벨 소환');return;
+  for(let i=0;i<N;i++){
+    const t=id(i);if(!t)continue;const r=Math.floor(i/COLS);
+    if(t==='fire')for(let c=0;c<COLS;c++){const j=r*COLS+c;if(j!==i&&id(j))v[j]+=1;}
+    if(t==='crown')ADJ[i].forEach(j=>{if(id(j))v[j]+=3;});
+    if(t==='bomb')ADJ[i].forEach(j=>{m[j]*=2;});
+    if(t==='bolt')for(let rr=0;rr<ROWS;rr++){const j=rr*COLS+i%COLS;if(j!==i)m[j]*=2;}
+    if(t==='magnet')for(let c=0;c<COLS;c++){const j=r*COLS+c,s=id(j);if(s==='coin'||s==='bill')m[j]*=3;}
+    if(t==='star'&&CORNERS.indexOf(i)>=0)m[i]*=3;
   }
-  const weak=(a,b)=>uMul(a)-uMul(b);
-  let same=S.units.filter(u=>u.type===type).sort(weak)[0];
-  if(same&&same.lv<lv){same.boost+=LV[same.lv];same.lv=lv;}
-  else{if(!same)same=S.units.slice().sort(weak)[0];same.boost+=LV[lv];}
-  same.hp=Math.min(uMax(same),same.hp+uMax(same)*0.5);
-  float(same.x,same.y-30,'UP',PAL.g,8);burst(same.x,same.y-12,PAL.g,6);
-  notes.push(SNAME[same.type]+' 강화');
-}
-function hurtEnemy(e,d){e.hp-=d;e.hit=.07;}
-function resolve(res){
-  const notes=[];let jack=false,mega=false;
-  const wilds=res.filter(s=>s==='wild').length;
-  let eff=res.filter(s=>s!=='wild');
-  if(wilds===3){
-    mega=true;const dmg=200*hpMult(S.wave);
-    S.enemies.forEach(e=>{hurtEnemy(e,dmg);burst(e.x,e.y-8,PAL.y,8);});
-    S.chips+=40;S.overclock=10;S.flash=.8;S.shake=.6;
-    summon(UNITS[Math.floor(Math.random()*4)],3,notes);notes.push('칩 +40','적 전체 폭격');
-  }else{
-    if(wilds>0){
-      const c={};eff.forEach(s=>c[s]=(c[s]||0)+1);
-      let b=eff[0];eff.forEach(s=>{if(c[s]>c[b]||(c[s]===c[b]&&b==='chip'&&s!=='chip'))b=s;});
-      for(let i=0;i<wilds;i++)eff.push(b);
+  if(has('corner'))CORNERS.forEach(i=>{m[i]*=2;});
+  let chips=0;for(let i=0;i<N;i++){v[i]=id(i)?v[i]*m[i]:0;chips+=v[i];}
+  const bonusChips=has('empty')?2*empties:0;chips+=bonusChips;
+  const base=1+(has('mult')?2:0)+S.bonusMult+clovers+2*rainbows;
+  const lines=[],lm=has('line')?1:0;
+  for(let r=0;r<ROWS;r++){
+    let bestRun=null;
+    for(let c0=0;c0<=COLS-3;c0++){
+      let sym=null;const cells=[];
+      for(let c=c0;c<COLS;c++){const t=id(r*COLS+c);if(!t)break;if(t!=='rainbow'){if(sym===null)sym=t;else if(t!==sym)break;}cells.push(r*COLS+c);}
+      if(cells.length>=3&&(!bestRun||cells.length>bestRun.length))bestRun=cells;
     }
-    const cnt={};eff.forEach(s=>cnt[s]=(cnt[s]||0)+1);
-    for(const s in cnt){
-      const n=cnt[s];
-      if(n===3)jack=true;
-      if(s==='chip'){const g=Math.round(CHIPPAY[n]*S.mods.chip);S.chips+=g;notes.push('칩 +'+g);}
-      else summon(s,n,notes);
-    }
-    if(jack){S.overclock=6;S.flash=.5;S.shake=.3;}
+    if(bestRun)lines.push({cells:bestRun,mul:[0,0,0,2,3,5][bestRun.length]+lm,jack:bestRun.length===5});
   }
-  if(jack||mega){
-    banner(mega?'MEGA JACKPOT!':'JACKPOT!');
-    beep(523,.12,'square',.05);beep(659,.12,'square',.05,.1);beep(784,.12,'square',.05,.2);beep(1047,.3,'square',.05,.3);
-  }else if(Object.keys(notes).length&&eff.some((s,i)=>eff.indexOf(s)!==i))beep(660,.08,'triangle',.05);
-  setMsg((mega?'메가 잭팟! ':jack?'잭팟! ':'')+notes.join(', '),jack||mega);
+  let mult=base;lines.forEach(l=>{mult*=l.mul;});
+  for(let k=0;k<aliens;k++)mult*=2;
+  const x3=sevens>=3;if(x3)mult*=3;
+  const over=has('over');if(over)mult*=1.5;
+  return {v:v,chips:chips,bonusChips:bonusChips,base:base,aliens:aliens,x3:x3,over:over,mult:mult,lines:lines,gain:Math.round(chips*mult)};
 }
-function doSpin(instant){
-  if(!S||S.state!=='play'||spinAnim)return false;
-  const cost=spinCost();
-  if(S.chips<cost){setMsg('칩이 부족합니다. 적을 처치하면 칩을 얻습니다.');return false;}
-  S.chips-=cost;
-  const res=[0,1,2].map(i=>held[i]?S.reels[i]:rollSym());
-  const wasHeld=held.slice();held=[false,false,false];
-  if(instant){S.reels=res;resolve(res);return true;}
-  const hot=!wasHeld[2]&&(res[0]===res[1]||res[0]==='wild'||res[1]==='wild');
-  spinAnim={res:res,t:0,tick:0,held:wasHeld,done:[false,false,false],stop:[0.3,0.5,hot?1.35:0.7],hot:hot};
-  return true;
+function settle(){
+  const res=S.res=calc(S.board);
+  S.board.forEach(t=>{if(t&&(t.id==='seed'||t.id==='pig'))t.grow++;});
+  S.total+=res.gain;S.spins--;
+  if(S.total>=quota(S.stage)){S.cleared=true;S.removes+=S.spins+(has('cut')?1:0);S.phase='pick';}
+  else if(S.spins<=0)S.phase='over';
+  else S.phase='pick';
+  return res;
 }
-function tickSpin(dt){
-  if(!spinAnim)return;
-  const a=spinAnim;a.t+=dt;a.tick+=dt;
-  const flip=a.tick>0.06;if(flip)a.tick=0;
-  for(let i=0;i<3;i++){
-    if(a.done[i])continue;
-    if(a.held[i]||a.t>=a.stop[i]){a.done[i]=true;S.reels[i]=a.res[i];if(!a.held[i])beep(300+i*90,.06,'square',.04);}
-    else if(flip){S.reels[i]=SYMS[Math.floor(Math.random()*SYMS.length)];if(i===2&&a.hot&&a.done[1])beep(500+a.t*400,.04,'square',.03);}
-  }
-  reelEls[2].b.classList.toggle('hot',a.hot&&a.done[1]&&!a.done[2]);
-  drawReels();
-  if(a.done[0]&&a.done[1]&&a.done[2]){spinAnim=null;resolve(a.res);drawReels();}
-}
-function nearest(list,x,range,filter){
-  let bestE=null,bd=1e9;
-  for(const e of list){if(filter&&!filter(e))continue;const d=Math.abs(e.x-x);if(d<bd){bd=d;bestE=e;}}
-  return bestE&&bd<=range?bestE:null;
-}
-function burst(x,y,color,n){for(let i=0;i<n;i++)S.fx.push({x:x,y:y,vx:rnd(-40,40),vy:rnd(-70,-5),life:rnd(.25,.55),c:color});}
-function fireStrike(x){
-  if(!S||S.state!=='play'||S.energy<100)return false;
-  S.energy=0;S.strikes.push({x:Math.max(30,Math.min(W-4,x)),t:.3});beep(900,.3,'sawtooth',.04);return true;
-}
-function frontX(){let m=null;for(const e of S.enemies)if(m===null||e.x<m)m=e.x;return m===null?120:m+6;}
-function update(dt){
-  S.t+=dt;S.waveT+=dt;
-  if(S.overclock>0)S.overclock-=dt;
-  if(S.flash>0)S.flash-=dt;
-  if(S.shake>0)S.shake-=dt;
-  if(S.hurt>0)S.hurt-=dt;
-  S.energy=Math.min(100,S.energy+2.5*S.mods.charge*dt);
-  while(S.queue.length&&S.queue[0].t<=S.waveT)spawnEnemy(S.queue.shift().type);
-  for(let i=S.strikes.length-1;i>=0;i--){
-    const k=S.strikes[i];k.t-=dt;
-    if(k.t<=0){
-      const dmg=40*hpMult(S.wave)*S.mods.strike;
-      for(const e of S.enemies)if(Math.abs(e.x-k.x)<=26)hurtEnemy(e,dmg);
-      S.beams.push({x:k.x,life:.25});S.shake=.3;burst(k.x,GROUND-4,PAL.c,22);burst(k.x,GROUND-4,PAL.w,10);
-      beep(90,.35,'sawtooth',.07);S.strikes.splice(i,1);
-    }
-  }
-  const oc=S.overclock>0?1.5:1;
-  for(const u of S.units){
-    const d=UT[u.type];u.cd-=dt;
-    const can=d.melee?(e=>!ET[e.type].fly):null;
-    const tgt=nearest(S.enemies,u.x,d.range,can);
-    if(tgt){
-      if(u.cd<=0){
-        u.cd=d.cd/(S.mods.aspd*oc);u.atk=.12;
-        if(d.multi){
-          const inr=S.enemies.filter(e=>Math.abs(e.x-u.x)<=d.range).sort((a,b)=>a.x-b.x).slice(0,d.multi);
-          for(const e of inr){hurtEnemy(e,uDmg(u));e.slow=1.5;S.lines.push({x1:u.x+4,y1:u.y-16,x2:e.x,y2:e.y-10,life:.12,c:PAL.g,z:true});}
-        }else{
-          hurtEnemy(tgt,uDmg(u));
-          if(!d.melee)S.lines.push({x1:u.x+10,y1:u.y-12,x2:tgt.x,y2:tgt.y-10,life:.08,c:PAL.y});
-          else{S.fx.push({x:tgt.x-3,y:tgt.y-12,vx:0,vy:0,life:.1,c:PAL.w,s:3});}
-        }
-      }
-    }else{
-      let goal=u.home;
-      const near=nearest(S.enemies,u.x,d.range+(d.melee?45:40),can);
-      if(near&&near.x<W-18)goal=Math.min(d.melee?999:132,near.x-d.range+2);
-      const dx=goal-u.x;if(Math.abs(dx)>1)u.x+=Math.sign(dx)*Math.min(Math.abs(dx),d.spd*dt);
-    }
-    if(u.atk>0)u.atk-=dt;
-  }
-  for(const e of S.enemies){
-    const d=ET[e.type];e.cd-=dt;if(e.slow>0)e.slow-=dt;if(e.hit>0)e.hit-=dt;
-    const tgt=nearest(S.units,e.x,d.range);
-    const atCore=e.x<=CORE_X+d.range;
-    const hitCore=()=>{e.cd=d.cd;S.coreHp-=e.dmg;S.hurt=.25;S.shake=Math.max(S.shake,.12);burst(16,GROUND-24,PAL.r,3);};
-    if(d.fly){
-      if(e.cd<=0){
-        if(tgt){e.cd=d.cd;tgt.hp-=e.dmg;S.lines.push({x1:e.x,y1:e.y,x2:tgt.x,y2:tgt.y-12,life:.08,c:PAL.p});}
-        else if(atCore){S.lines.push({x1:e.x,y1:e.y,x2:14,y2:GROUND-26,life:.08,c:PAL.p});hitCore();}
-      }
-      if(!atCore)e.x-=d.spd*(e.slow>0?0.6:1)*dt;
-    }else if(tgt){
-      if(e.cd<=0){e.cd=d.cd;tgt.hp-=e.dmg;}
-    }else if(atCore){
-      if(e.cd<=0)hitCore();
-    }else e.x-=d.spd*(e.slow>0?0.6:1)*dt;
-  }
-  S.turretCd-=dt;
-  if(S.turretCd<=0){
-    const t=nearest(S.enemies,CORE_X,62);
-    if(t){S.turretCd=1;hurtEnemy(t,5*S.mods.turret);S.lines.push({x1:13,y1:GROUND-44,x2:t.x,y2:t.y-10,life:.1,c:PAL.c});}
-  }
-  for(let i=S.enemies.length-1;i>=0;i--){
-    const e=S.enemies[i];
-    if(e.hp<=0){
-      const boss=e.type==='boss',gain=e.reward*S.mods.reward*CFG.rw;
-      S.chips+=gain;S.energy=Math.min(100,S.energy+(boss?40:7)*S.mods.charge);
-      float(e.x,e.y-22,'+'+Math.max(1,Math.round(gain)),PAL.y);
-      burst(e.x,e.y-10,boss?PAL.r:PAL.m,boss?40:10);burst(e.x,e.y-10,PAL.y,boss?16:3);
-      if(boss){S.shake=.6;S.flash=.3;beep(70,.5,'sawtooth',.07);}else beep(220+Math.random()*80,.04,'square',.02);
-      S.enemies.splice(i,1);
-    }
-  }
-  for(let i=S.units.length-1;i>=0;i--){
-    const u=S.units[i];if(u.hp<=0){burst(u.x,u.y-10,PAL.c,12);S.units.splice(i,1);}
-  }
-  for(let i=S.fx.length-1;i>=0;i--){const p=S.fx[i];p.life-=dt;p.x+=p.vx*dt;p.y+=p.vy*dt;if(p.vx||p.vy)p.vy+=160*dt;if(p.life<=0)S.fx.splice(i,1);}
-  for(let i=S.lines.length-1;i>=0;i--){S.lines[i].life-=dt;if(S.lines[i].life<=0)S.lines.splice(i,1);}
-  for(let i=S.beams.length-1;i>=0;i--){S.beams[i].life-=dt;if(S.beams[i].life<=0)S.beams.splice(i,1);}
-  for(let i=S.floats.length-1;i>=0;i--){const f=S.floats[i];f.life-=dt;f.y-=16*dt;if(f.life<=0)S.floats.splice(i,1);}
-  if(S.coreHp<=0){S.coreHp=0;endGame(false);return;}
-  if(!S.queue.length&&!S.enemies.length)waveClear();
-}
-function waveClear(){
-  const bonus=Math.round((10+S.wave)*CFG.rw);S.chips+=bonus;
-  beep(660,.1,'triangle',.05);beep(880,.15,'triangle',.05,.1);
-  if(S.wave>=MAXWAVE){endGame(true);return;}
-  S.state='pick';showPick(bonus);
-}
-function pickOptions(){
-  const pool=IMPLANTS.filter(p=>!p.ok||p.ok(S)),out=[];
-  while(out.length<3&&pool.length)out.push(pool.splice(Math.floor(Math.random()*pool.length),1)[0]);
+function pickN(pool,n,w){
+  const out=[];pool=pool.slice();
+  while(out.length<n&&pool.length){let tot=0;pool.forEach(k=>tot+=w(k));let r=Math.random()*tot,i=0;for(;i<pool.length-1;i++){r-=w(pool[i]);if(r<0)break;}out.push(pool.splice(i,1)[0]);}
   return out;
 }
-function applyPick(p){p.f(S.mods,S);startWave(S.wave+1);}
-function showPick(bonus){
-  $('pickTitle').textContent='웨이브 '+S.wave+' 클리어 (칩 +'+bonus+')';
+function symOptions(){
+  const s=S.stage-1,rad=has('radar')?2:1,W=[Math.max(20,62-4*s),28+2*s,(9+1.5*s)*rad,(1+0.5*s)*rad];
+  const per=[0,0,0,0];Object.keys(SYM).forEach(k=>per[SYM[k].r]++);
+  return pickN(Object.keys(SYM),3,k=>W[SYM[k].r]/per[SYM[k].r]);
+}
+function addSym(id){
+  if(id)S.deck.push(mk(id));
+  if(S.cleared)S.phase=(S.stage===WIN&&!S.endless)?'won':'mod';else S.phase='idle';
+}
+function modOptions(){return pickN(Object.keys(MOD).filter(k=>!has(k)),3,()=>1);}
+function takeMod(id){if(id)S.mods.push(id);if(has('grow'))S.bonusMult++;S.stage++;beginStage();}
+function removeSym(id){
+  if(S.removes<=0||S.deck.length<=1)return false;
+  const i=S.deck.findIndex(t=>t.id===id&&S.board.indexOf(t)<0),j=i>=0?i:S.deck.findIndex(t=>t.id===id);
+  if(j<0)return false;const t=S.deck.splice(j,1)[0];const b=S.board.indexOf(t);if(b>=0)S.board[b]=null;S.removes--;return true;
+}
+
+/* ---------- 화면 ---------- */
+const cells=[];
+const sleep=ms=>new Promise(r=>setTimeout(r,fast?0:ms));
+const fmt=n=>(Math.round(n*10)/10).toLocaleString('ko-KR');
+function setMsg(t){$('msg').textContent=t;}
+function paintCell(i,t,val){
+  const c=cells[i];c.className='cell'+(t?' r'+SYM[t.id].r:' empty');
+  c.firstChild.textContent=t?SYM[t.id].e:'';c.lastChild.textContent=val===undefined||val===null?'':val;
+}
+function paintBoard(showVals){for(let i=0;i<N;i++)paintCell(i,S.board[i],showVals&&S.board[i]?S.res.v[i]:null);}
+function setBox(id,n,label,bump){const b=$(id);b.firstChild.nodeValue=fmt(n);if(bump){b.classList.remove('bump');void b.offsetWidth;b.classList.add('bump');}}
+function hud(){
+  $('hStage').textContent='STAGE '+S.stage+(S.stage>WIN?'':' / '+WIN);
+  const q=quota(S.stage);$('goalTxt').textContent='목표 '+fmt(S.total)+' / '+fmt(q);
+  $('goalFill').style.width=Math.min(100,S.total/q*100)+'%';
+  const p=$('pips');p.textContent='';const lab=document.createElement('span');lab.textContent='남은 스핀';p.appendChild(lab);
+  const tot=5+(has('spin')?1:0);for(let i=0;i<tot;i++){const d=document.createElement('i');if(i>=S.spins)d.className='off';p.appendChild(d);}
+  const m=$('mods');m.textContent='';const l=document.createElement('span');l.className='lbl';
+  l.textContent=S.mods.length?'모듈':'모듈 없음. 스테이지를 넘기면 얻습니다.';m.appendChild(l);
+  S.mods.forEach(k=>{const b=document.createElement('button');b.type='button';b.className='mod';b.textContent=MOD[k].e;
+    b.addEventListener('click',()=>setMsg(MOD[k].n+': '+MOD[k].d));m.appendChild(b);});
+  $('deckSub').textContent=S.deck.length+'개'+(S.removes?', 제거권 '+S.removes:'');
+  const sp=$('spin');
+  if(S.phase==='adjust'){sp.textContent='정산하기';sp.className='btn score';}else{sp.textContent='스핀';sp.className='btn';}
+  sp.disabled=busy||!(S.phase==='idle'||S.phase==='adjust');
+}
+function preview(){
+  setBox('bChips',S.res.chips);setBox('bMult',S.res.mult);
+  $('gain').textContent='예상 '+fmt(S.res.gain);$('gain').className='';
+  for(let i=0;i<N;i++)cells[i].classList.toggle('pickable',S.respins>0);
+  setMsg(S.respins>0?'세로줄을 누르면 그 줄만 다시 돌립니다. 남은 재스핀 '+S.respins+'회':'재스핀이 없습니다. 정산하기를 누르세요.');
+}
+async function animCols(cols){
+  const pool=S.deck.map(t=>SYM[t.id].e);
+  cols.forEach(c=>[c,c+COLS,c+2*COLS].forEach(i=>{cells[i].className='cell roll';cells[i].lastChild.textContent='';}));
+  let live=cols.slice();
+  const iv=setInterval(()=>{live.forEach(c=>[c,c+COLS,c+2*COLS].forEach(i=>{cells[i].firstChild.textContent=pool[Math.floor(Math.random()*pool.length)];}));},60);
+  for(const c of cols){
+    await sleep(cols.length>1?150:320);
+    live=live.filter(x=>x!==c);
+    [c,c+COLS,c+2*COLS].forEach(i=>{paintCell(i,S.board[i],null);cells[i].classList.add('land');});
+    beep(260+c*50,.06,'square',.04);
+  }
+  clearInterval(iv);
+}
+async function doSpin(){
+  if(busy||S.phase!=='idle')return;
+  busy=true;fast=false;$('gain').textContent='';setBox('bChips',0);setBox('bMult',1);setMsg('');hud();
+  draw();await animCols([0,1,2,3,4]);
+  busy=false;hud();preview();
+}
+async function doRespin(c){
+  if(busy||S.phase!=='adjust')return;
+  if(S.respins<=0){setMsg('재스핀이 없습니다. 정산하기를 누르세요.');return;}
+  busy=true;respinCol(c);hud();await animCols([c]);busy=false;hud();preview();
+}
+async function doScore(){
+  if(busy||S.phase!=='adjust')return;
+  busy=true;fast=false;
+  const res=settle();hud();
+  for(let i=0;i<N;i++)cells[i].classList.remove('pickable');
+  $('gain').textContent='';setMsg('화면을 누르면 빨리 넘어갑니다.');
+  let chips=0,k=0;const filled=S.board.filter(Boolean).length,step=Math.max(45,120-filled*5);
+  setBox('bChips',0);setBox('bMult',1);
+  for(let i=0;i<N;i++){
+    if(!S.board[i])continue;
+    chips+=res.v[i];cells[i].lastChild.textContent=res.v[i];cells[i].classList.remove('land','pop');void cells[i].offsetWidth;cells[i].classList.add('pop');
+    setBox('bChips',chips,null,true);beep(330+k*28,.05,'square',.035);k++;await sleep(step);
+  }
+  if(res.bonusChips){chips+=res.bonusChips;setBox('bChips',chips,null,true);await sleep(150);}
+  let mult=res.base;
+  setBox('bMult',mult,null,mult>1);if(mult>1){beep(700,.08,'triangle',.05);await sleep(220);}
+  const bumpM=async(x,msg,f)=>{mult*=x;setBox('bMult',mult,null,true);setMsg(msg);beep(f,.14,'triangle',.06);beep(f*1.25,.14,'triangle',.05,.08);await sleep(430);};
+  for(const l of res.lines){
+    l.cells.forEach(i=>{cells[i].classList.remove('pop');void cells[i].offsetWidth;cells[i].classList.add('line');});
+    await bumpM(l.mul,(l.jack?'JACKPOT! 한 줄 완성, 배수 ':'줄 완성! 배수 ')+l.mul+'배',l.jack?1320:880);
+  }
+  for(let k=0;k<res.aliens;k++)await bumpM(2,'외계인! 배수 2배',990);
+  if(res.x3)await bumpM(3,'세븐 3개! 배수 3배',1320);
+  if(res.over)await bumpM(1.5,'과부하! 배수 1.5배',1100);
+  const g=$('gain');g.textContent='+'+fmt(res.gain);g.className='big';
+  beep(523,.1,'square',.05);beep(784,.16,'square',.05,.09);
+  hud();await sleep(650);
+  busy=false;fast=false;
+  if(S.phase==='over'){endGame(false);return;}
+  showPick();
+}
+function card(e,name,tag,desc,r,onClick){
+  const b=document.createElement('button');b.type='button';b.className='card r'+r;
+  const em=document.createElement('span');em.className='e';em.textContent=e;
+  const d=document.createElement('div');const n=document.createElement('b');n.textContent=name;
+  if(tag){const i=document.createElement('i');i.textContent=tag;n.appendChild(i);}
+  const s=document.createElement('span');s.textContent=desc;d.appendChild(n);d.appendChild(s);
+  b.appendChild(em);b.appendChild(d);if(onClick)b.addEventListener('click',onClick);return b;
+}
+function showPick(){
   const box=$('picks');box.textContent='';
-  pickOptions().forEach(p=>{
-    const b=document.createElement('button');b.type='button';b.className='card';
-    const n=document.createElement('b');n.textContent=p.n;const s=document.createElement('span');s.textContent=p.d;
-    b.appendChild(n);b.appendChild(s);
-    b.addEventListener('click',()=>{$('ovPick').hidden=true;applyPick(p);});
-    box.appendChild(b);
-  });
+  $('pickTitle').textContent=S.cleared?'스테이지 클리어! 심볼을 하나 추가하세요':'심볼을 하나 추가하세요';
+  $('pickSub').textContent='지금 내 심볼 '+S.deck.length+'개. 15개를 넘으면 한 번에 다 나오지 않습니다.';
+  $('skip').hidden=false;
+  if(S.cleared){beep(660,.1,'triangle',.06);beep(880,.1,'triangle',.06,.1);beep(1320,.25,'triangle',.06,.2);}
+  symOptions().forEach(k=>{const s=SYM[k];box.appendChild(card(s.e,s.n,RN[s.r],s.d,s.r,()=>afterPick(k)));});
   $('ovPick').hidden=false;
 }
-function endGame(win){
-  S.state='over';
-  const reached=win?MAXWAVE:S.wave-1;
-  if(reached>best){best=reached;try{localStorage.setItem('neonspin_best',String(best));}catch(e){}}
-  $('endTitle').textContent=win?'네온 시티를 지켜냈습니다':'코어가 파괴되었습니다';
-  $('endText').textContent=(win?'20웨이브를 모두 막았습니다.':'웨이브 '+S.wave+'에서 무너졌습니다.')+' 최고 기록: '+best+'웨이브 클리어';
-  $('ovPick').hidden=true;$('ovEnd').hidden=false;
-  if(!win){beep(200,.3,'sawtooth',.05);beep(120,.5,'sawtooth',.05,.25);}
+function afterPick(k){
+  addSym(k);$('ovPick').hidden=true;
+  if(S.phase==='won'){endGame(true);return;}
+  if(S.phase==='mod'){showMods();return;}
+  hud();setMsg('스핀을 누르세요.');
 }
-function setMsg(t,jack){const m=$('msg');m.textContent=t;m.className=jack?'jack':'';}
-
-/* 그리기: 논리 좌표 200x130, 실제 캔버스는 2배 */
-const cv=$('field'),cx=cv.getContext('2d');
-const HZ=104,bg=document.createElement('canvas');bg.width=W;bg.height=H;
-(function(){
-  const b=bg.getContext('2d');
-  const g=b.createLinearGradient(0,0,0,HZ);g.addColorStop(0,'#0a0618');g.addColorStop(1,'#3a1256');b.fillStyle=g;b.fillRect(0,0,W,H);
-  b.fillStyle='#ff2bd6';b.globalAlpha=.25;b.beginPath();b.arc(150,40,18,0,7);b.fill();b.globalAlpha=1;
-  let seed=7;const r=()=>(seed=(seed*16807)%2147483647)/2147483647;
-  for(let x=0;x<W;){const w=8+Math.floor(r()*10),h=26+Math.floor(r()*44);b.fillStyle='#1a0f36';b.fillRect(x,HZ-h,w,h);
-    for(let wy=HZ-h+3;wy<HZ-4;wy+=4)for(let wx=x+2;wx<x+w-1;wx+=3)if(r()<.28){b.fillStyle=r()<.5?'#29f0ff':(r()<.5?'#ff2bd6':'#ffe14a');b.globalAlpha=.55;b.fillRect(wx,wy,1,2);b.globalAlpha=1;}
-    x+=w+1;}
-  for(let x=0;x<W;){const w=12+Math.floor(r()*14),h=10+Math.floor(r()*24);b.fillStyle='#0d0820';b.fillRect(x,HZ-h,w,h);
-    if(r()<.5){b.fillStyle=r()<.5?'#ff2bd6':'#29f0ff';b.fillRect(x+2,HZ-h+3,Math.max(3,w-6),2);}
-    x+=w+2;}
-  b.fillStyle='#120a22';b.fillRect(0,HZ,W,H-HZ);
-  b.strokeStyle='rgba(255,43,214,.35)';b.lineWidth=1;
-  for(let y=HZ+2;y<H;y+=5){b.beginPath();b.moveTo(0,y+.5);b.lineTo(W,y+.5);b.stroke();}
-  for(let x=-60;x<260;x+=14){b.beginPath();b.moveTo(100+(x-100)*.55,HZ);b.lineTo(x,H);b.stroke();}
-})();
-function drawSprite(spr,x,y,scale){const w=spr.width*scale,h=spr.height*scale;cx.drawImage(spr,Math.round(x-w/2),Math.round(y-h),w,h);return h;}
-function bar(x,y,w,ratio,color){cx.fillStyle='#000';cx.fillRect(Math.round(x-w/2),Math.round(y),w,2);cx.fillStyle=color;cx.fillRect(Math.round(x-w/2),Math.round(y),Math.max(0,Math.round(w*ratio)),2);}
-function text(t,x,y,c,size){cx.font='bold '+size+'px sans-serif';cx.textAlign='center';cx.fillStyle='#000';cx.fillText(t,x+.5,y+.5);cx.fillStyle=c;cx.fillText(t,x,y);}
-function render(){
-  cx.setTransform(2,0,0,2,0,0);cx.imageSmoothingEnabled=false;
-  if(S&&S.shake>0)cx.translate(Math.round(rnd(-2,2)),Math.round(rnd(-2,2)));
-  cx.drawImage(bg,0,0);
-  if(!S)return;
-  cx.fillStyle='rgba(41,240,255,.35)';
-  for(let i=0;i<14;i++){const rx=(i*37+S.t*90)%220-10,ry=(i*53+S.t*160)%HZ;cx.fillRect(Math.round(rx),Math.round(ry),1,3);}
-  const low=S.coreHp/S.coreMax<0.3,G0=GROUND;
-  cx.fillStyle='#241640';cx.fillRect(3,G0-40,20,42);cx.fillStyle='#3a2a66';cx.fillRect(5,G0-46,16,7);
-  cx.fillStyle=low?PAL.r:PAL.c;for(let y=G0-34;y<G0-4;y+=7){cx.fillRect(7,y,4,3);cx.fillRect(15,y,4,3);}
-  const pulse=3+Math.round(Math.sin(S.t*5)+1);cx.globalAlpha=.35;cx.fillRect(13-pulse,G0-52-pulse,pulse*2,pulse*2);cx.globalAlpha=1;cx.fillRect(11,G0-54,4,4);
-  for(const k of S.strikes){cx.strokeStyle='rgba(41,240,255,.8)';cx.lineWidth=.5;cx.beginPath();cx.moveTo(k.x,0);cx.lineTo(k.x,G0);cx.stroke();
-    cx.strokeStyle=PAL.c;cx.beginPath();cx.ellipse(k.x,G0,26*(1-k.t/.3)+2,4,0,0,7);cx.stroke();}
-  const all=[];
-  S.units.forEach(u=>all.push({o:u,u:true}));S.enemies.forEach(e=>all.push({o:e,u:false}));
-  all.sort((a,b)=>a.o.y-b.o.y);
-  for(const a of all){
-    const o=a.o;
-    if(a.u){
-      if(o.lv>1){cx.fillStyle=o.lv===3?PAL.y:PAL.c;cx.globalAlpha=.55;cx.fillRect(Math.round(o.x-9),Math.round(o.y),18,2);cx.globalAlpha=1;}
-      const h=drawSprite(SPR[o.type],o.x+(o.atk>0?2:0),o.y,o.lv===3?3:2);
-      const r=o.hp/uMax(o);if(r<1)bar(o.x,o.y-h-3,14,r,PAL.g);
-      text(String(Math.max(1,Math.round(uMul(o)))),o.x,o.y-h-5,S.overclock>0?PAL.y:(o.lv===3?PAL.y:PAL.c),6);
-    }else{
-      const d=ET[o.type],h=drawSprite(o.hit>0?WSPR[o.type]:SPR[o.type],o.x,o.y,d.scale||2);
-      if(o.slow>0){cx.fillStyle=PAL.g;cx.fillRect(Math.round(o.x-2),Math.round(o.y-h-6),4,2);}
-      const r=o.hp/o.max;if(r<1)bar(o.x,o.y-h-3,d.bar||14,r,PAL.r);
-    }
-  }
-  for(const l of S.lines){cx.strokeStyle=l.c;cx.lineWidth=l.z?1.5:1;cx.beginPath();cx.moveTo(l.x1,l.y1);
-    if(l.z){const mx=(l.x1+l.x2)/2,my=(l.y1+l.y2)/2;cx.lineTo(mx+rnd(-4,4),my+rnd(-6,6));}cx.lineTo(l.x2,l.y2);cx.stroke();}
-  for(const p of S.fx){cx.fillStyle=p.c;const s=p.s||2;cx.fillRect(Math.round(p.x),Math.round(p.y),s,s);}
-  for(const b of S.beams){const a=b.life/.25;cx.fillStyle='rgba(41,240,255,'+(a*.5)+')';cx.fillRect(b.x-12,0,24,G0+4);cx.fillStyle='rgba(255,255,255,'+a+')';cx.fillRect(b.x-4,0,8,G0+4);}
-  for(const f of S.floats){cx.globalAlpha=Math.min(1,f.life*2.5);text(f.txt,f.x,f.y,f.c,f.size);cx.globalAlpha=1;}
-  cx.setTransform(2,0,0,2,0,0);
-  if(S.hurt>0){cx.strokeStyle='rgba(255,59,92,'+(S.hurt*3)+')';cx.lineWidth=6;cx.strokeRect(0,0,W,H);}
-  if(S.flash>0){cx.fillStyle='rgba(255,225,74,'+Math.min(.6,S.flash*.8)+')';cx.fillRect(0,0,W,H);}
+function showMods(){
+  const box=$('picks');box.textContent='';
+  $('pickTitle').textContent='모듈을 하나 고르세요';
+  $('pickSub').textContent='모듈은 게임이 끝날 때까지 계속 적용됩니다.'+(S.removes?' 제거권 '+S.removes+'개는 내 심볼 화면에서 쓸 수 있습니다.':'');
+  const opts=modOptions();$('skip').hidden=opts.length>0;
+  opts.forEach(k=>{const m=MOD[k];box.appendChild(card(m.e,m.n,'',m.d,3,()=>afterMod(k)));});
+  $('ovPick').hidden=false;
 }
-const reelEls=[];
-function icon(canvas,sym){const c=canvas.getContext('2d');c.imageSmoothingEnabled=false;c.clearRect(0,0,14,14);const s=SPR[sym];c.drawImage(s,Math.floor((14-s.width)/2),Math.floor((14-s.height)/2));}
-function buildUi(){
-  const box=$('reels');
-  for(let i=0;i<3;i++){
-    const b=document.createElement('button');b.type='button';b.className='reel';b.id='reel'+i;
-    const c=document.createElement('canvas');c.width=14;c.height=14;
-    const n=document.createElement('span');const t=document.createElement('span');t.className='tag';t.textContent='홀드';t.hidden=true;
-    b.appendChild(c);b.appendChild(n);b.appendChild(t);box.appendChild(b);reelEls.push({b:b,c:c,n:n,t:t});
-    b.addEventListener('click',()=>{
-      if(!S||S.state!=='play'||spinAnim)return;
-      if(!held[i]&&held.filter(Boolean).length>=2){setMsg('홀드는 최대 2개까지 됩니다.');return;}
-      held[i]=!held[i];beep(held[i]?700:400,.05,'square',.03);drawReels();
-    });
-  }
-  const lg=$('legend'),extra={chip:'스핀에 쓰는 돈. 칩 심볼이 나오면 바로 얻습니다.',wild:'어떤 심볼과도 짝이 됩니다. 3개가 모이면 메가 잭팟.'};
-  SYMS.forEach(k=>{
-    const d=document.createElement('div');d.className='leg';const c=document.createElement('canvas');c.width=14;c.height=14;icon(c,k);
-    const t=document.createElement('div');const b=document.createElement('b');b.textContent=SNAME[k];
-    t.appendChild(b);t.appendChild(document.createTextNode(extra[k]||UT[k].desc));
-    d.appendChild(c);d.appendChild(t);lg.appendChild(d);
+function afterMod(k){
+  takeMod(k);$('ovPick').hidden=true;
+  S.board=new Array(N).fill(null);paintBoard(false);setBox('bChips',0);setBox('bMult',1);$('gain').textContent='';
+  hud();setMsg('STAGE '+S.stage+' 시작. 목표 '+fmt(quota(S.stage))+'점');
+}
+function showDeck(){
+  $('deckInfo').textContent='모두 '+S.deck.length+'개. '+(S.removes?'제거권 '+S.removes+'개가 있습니다. 없앨 심볼의 제거를 누르세요.':'제거권은 스핀을 남기고 스테이지를 넘기면 얻습니다.');
+  const box=$('deckList');box.textContent='';const cnt={};S.deck.forEach(t=>cnt[t.id]=(cnt[t.id]||0)+1);
+  Object.keys(SYM).filter(k=>cnt[k]).forEach(k=>{
+    const s=SYM[k],c=card(s.e,s.n+' ×'+cnt[k],RN[s.r],s.d,s.r,null);c.style.cursor='default';
+    if(S.removes>0&&S.deck.length>1&&(S.phase==='idle'||S.phase==='mod')){
+      const r=document.createElement('span');r.className='rm';r.textContent='제거';r.setAttribute('role','button');
+      r.addEventListener('click',()=>{if(removeSym(k)){beep(200,.1,'sawtooth',.04);paintBoard(false);hud();showDeck();}});c.appendChild(r);}
+    box.appendChild(c);
   });
+  $('ovDeck').hidden=false;
 }
-function drawReels(){
-  if(!S)return;
-  for(let i=0;i<3;i++){const r=reelEls[i];icon(r.c,S.reels[i]);r.n.textContent=SNAME[S.reels[i]];r.b.classList.toggle('held',held[i]);r.t.hidden=!held[i];}
-}
-function hud(){
-  if(!S)return;
-  $('hWave').textContent=S.wave+'/'+MAXWAVE;$('hCore').textContent=Math.ceil(S.coreHp);
-  $('hChips').textContent=Math.floor(S.chips);$('hPop').textContent=S.units.length+'/'+S.pop;
-  $('coreFill').style.width=Math.max(0,S.coreHp/S.coreMax*100)+'%';
-  const cost=spinCost();$('spinCost').textContent='칩 '+cost;
-  $('spin').disabled=S.state!=='play'||!!spinAnim||S.chips<cost;
-  const ready=S.energy>=100;
-  $('strikeFill').style.width=S.energy+'%';
-  $('strikeTxt').textContent=ready?'궤도포 준비 완료! 전장을 눌러 발사':'궤도포 충전 '+Math.floor(S.energy)+'%';
-  $('strike').classList.toggle('ready',ready);$('fw').classList.toggle('ready',ready);
+function endGame(win){
+  const reached=win?WIN:S.stage-1;
+  if(reached>best){best=reached;try{localStorage.setItem('neonjackpot_best',String(best));}catch(e){}}
+  $('endTitle').textContent=win?'잭팟! 10스테이지 돌파':'목표 점수 미달';
+  $('endText').textContent=(win?'카지노를 털었습니다. 계속 도전하면 목표가 끝없이 올라갑니다.':'STAGE '+S.stage+'에서 '+fmt(S.total)+' / '+fmt(quota(S.stage))+'점으로 끝났습니다.')+' 최고 기록: '+best+'스테이지 클리어';
+  $('cont').hidden=!win;$('ovEnd').hidden=false;
+  if(win){[523,659,784,1047,1319].forEach((f,i)=>beep(f,.18,'square',.05,i*.11));}else{beep(200,.3,'sawtooth',.05);beep(120,.5,'sawtooth',.05,.25);}
 }
 function start(){
   if(!AC){try{AC=new (window.AudioContext||window.webkitAudioContext)();}catch(e){}}
-  const sp=S?S.speed:1;
-  S=newState();S.speed=sp;held=[false,false,false];spinAnim=null;
-  $('ovTitle').hidden=true;$('ovEnd').hidden=true;$('ovPick').hidden=true;
-  startWave(1);
-  setMsg('스핀을 눌러 유닛을 뽑으세요');drawReels();
+  newRun();busy=false;
+  ['ovTitle','ovEnd','ovPick','ovDeck'].forEach(k=>$(k).hidden=true);
+  paintBoard(false);setBox('bChips',0);setBox('bMult',1);$('gain').textContent='';hud();
+  setMsg('스핀을 누르세요. 목표 '+fmt(quota(1))+'점을 스핀 5번 안에 넘기면 됩니다.');
 }
-let last=0;
-function frame(ts){
-  const dt=Math.min(0.05,(ts-last)/1000||0);last=ts;
-  if(S&&S.state==='play')for(let i=0;i<S.speed&&S.state==='play';i++)update(dt*1.2);
-  tickSpin(dt);render();hud();requestAnimationFrame(frame);
-}
-buildUi();
-$('bestLine').textContent=best?'최고 기록: '+best+'웨이브 클리어':'';
+(function build(){
+  const g=$('grid');
+  for(let i=0;i<N;i++){
+    const b=document.createElement('button');b.type='button';b.className='cell empty';
+    b.appendChild(document.createElement('span'));const v=document.createElement('span');v.className='v';b.appendChild(v);
+    b.addEventListener('click',()=>{
+      if(busy){fast=true;return;}
+      if(!S)return;
+      if(S.phase==='adjust'){doRespin(i%COLS);return;}
+      const t=S.board[i];if(t)setMsg(SYM[t.id].n+': '+SYM[t.id].d);
+    });
+    g.appendChild(b);cells.push(b);
+  }
+})();
+$('bestLine').textContent=best?'최고 기록: '+best+'스테이지 클리어':'';
 $('start').addEventListener('click',start);
 $('again').addEventListener('click',start);
-$('spin').addEventListener('click',()=>doSpin(false));
-$('speed').addEventListener('click',()=>{if(!S)return;S.speed=S.speed===1?2:1;$('speed').textContent='속도 x'+S.speed;});
-$('mute').addEventListener('click',()=>{muted=!muted;$('mute').textContent=muted?'소리 끔':'소리 켬';});
-cv.addEventListener('pointerdown',ev=>{const r=cv.getBoundingClientRect();fireStrike((ev.clientX-r.left)/r.width*W);});
-$('strike').addEventListener('click',()=>{if(S&&S.state==='play')fireStrike(frontX());});
-let helpPrev=null;
-function openHelp(){$('ovHelp').hidden=false;if(S&&S.state==='play'){helpPrev='play';S.state='help';}}
+$('cont').addEventListener('click',()=>{S.endless=true;$('ovEnd').hidden=true;S.phase='mod';showMods();});
+$('spin').addEventListener('click',()=>{if(!S)return;if(S.phase==='adjust')doScore();else doSpin();});
+$('skip').addEventListener('click',()=>{if(S.phase==='pick')afterPick(null);else if(S.phase==='mod')afterMod(null);});
+$('deckBtn').addEventListener('click',()=>{if(S&&!busy)showDeck();});
+$('deckClose').addEventListener('click',()=>{$('ovDeck').hidden=true;});
+function openHelp(){$('ovHelp').hidden=false;}
 $('help').addEventListener('click',openHelp);$('help2').addEventListener('click',openHelp);
-$('helpClose').addEventListener('click',()=>{$('ovHelp').hidden=true;if(helpPrev&&S&&S.state==='help')S.state='play';helpPrev=null;});
-window.G={cfg:CFG,get S(){return S;},start:start,step:update,spin:()=>doSpin(true),options:pickOptions,pick:applyPick,strike:()=>fireStrike(frontX())};
-requestAnimationFrame(frame);
+$('helpClose').addEventListener('click',()=>{$('ovHelp').hidden=true;});
+$('mute').addEventListener('click',()=>{muted=!muted;$('mute').textContent=muted?'소리 켜기':'소리 끄기';$('muteSub').textContent=muted?'소리 끔':'소리 켬';});
+window.G={get S(){return S;},SYM:SYM,MOD:MOD,QUOTA:QUOTA,newRun:newRun,draw:draw,respinCol:respinCol,calc:calc,settle:settle,
+  symOptions:symOptions,addSym:addSym,modOptions:modOptions,takeMod:takeMod,removeSym:removeSym};
 })();
 </script>
 </body>
