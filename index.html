@@ -2,740 +2,490 @@
 <html lang="ko">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>미국 주식 분석 대시보드</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<title>네온 스핀 디펜스</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;800&display=swap">
 <style>
-:root {
-  color-scheme: light;
-  --bg: #f4f4f2;
-  --surface: #fcfcfb;
-  --border: #e3e2de;
-  --text: #0b0b0b;
-  --text-2: #52514e;
-  --text-3: #7a7974;
-  --grid: #ebeae6;
-  --accent: #184f95;
-  --accent-bg: #e6eefa;
-  --up: #c8302f;
-  --down: #1c5cab;
-  --s-close: #0b0b0b;
-  --s-ma20: #2a78d6;
-  --s-ma60: #eb6834;
-  --s-ma120: #1baf7a;
+/* 레이아웃: 세로 한 화면. 위에서부터 상태 표시, 전장, 슬롯, 버튼, 유닛 안내 */
+:root{
+  --bg:#07040f; --panel:#120a24; --line:#3a2a66; --fg:#e9e4ff; --dim:#9a8fc4;
+  --cyan:#29f0ff; --pink:#ff2bd6; --gold:#ffe14a; --red:#ff3b5c; --green:#39ff88;
+  --num:"Orbitron","Malgun Gothic","Apple SD Gothic Neo",sans-serif;
+  --txt:"Apple SD Gothic Neo","Malgun Gothic","Noto Sans KR",system-ui,sans-serif;
+  color-scheme:dark;
 }
-@media (prefers-color-scheme: dark) {
-  :root {
-    color-scheme: dark;
-    --bg: #111110;
-    --surface: #1a1a19;
-    --border: #33322f;
-    --text: #f0efec;
-    --text-2: #c3c2b7;
-    --text-3: #96958c;
-    --grid: #2a2927;
-    --accent: #9ec5f4;
-    --accent-bg: #1d2c40;
-    --up: #f07b7a;
-    --down: #6da7ec;
-    --s-close: #f0efec;
-    --s-ma20: #3987e5;
-    --s-ma60: #d95926;
-    --s-ma120: #199e70;
-  }
-}
-* { box-sizing: border-box; }
-[hidden] { display: none !important; }
-html { -webkit-text-size-adjust: 100%; }
-body {
-  margin: 0;
-  background: var(--bg);
-  color: var(--text);
-  font-family: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Malgun Gothic", "Noto Sans KR", "Segoe UI", sans-serif;
-  font-size: 15px;
-  line-height: 1.5;
-  word-break: keep-all;
-  overflow-wrap: anywhere;
-}
-.wrap { max-width: 1080px; margin: 0 auto; padding: 16px 16px 40px; }
-header h1 { font-size: 20px; margin: 4px 0 2px; line-height: 1.3; }
-.meta { color: var(--text-2); font-size: 13px; }
-.card {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  padding: 16px;
-  margin-top: 12px;
-  min-width: 0;
-}
-h2 { font-size: 16px; margin: 0 0 10px; }
-h3 { font-size: 13px; font-weight: 600; color: var(--text-2); margin: 16px 0 8px; }
-.chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
-.chip, .seg button {
-  font: inherit;
-  font-size: 14px;
-  color: var(--text);
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 999px;
-  padding: 7px 13px;
-  min-height: 36px;
-  cursor: pointer;
-}
-.chip[aria-pressed="true"], .seg button[aria-pressed="true"] {
-  background: var(--accent-bg);
-  border-color: var(--accent);
-  color: var(--accent);
-  font-weight: 700;
-}
-.chip:focus-visible, .seg button:focus-visible, th button:focus-visible, tbody tr:focus-visible {
-  outline: 2px solid var(--accent);
-  outline-offset: 2px;
-}
-.hero { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 12px; }
-.hero .sym { font-size: 22px; font-weight: 800; }
-.hero .nm { color: var(--text-2); font-size: 14px; }
-.price-row { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 12px; margin-top: 6px; }
-.price { font-size: 30px; font-weight: 800; font-variant-numeric: tabular-nums; line-height: 1.2; }
-.chg { font-size: 16px; font-weight: 700; font-variant-numeric: tabular-nums; }
-.up { color: var(--up); }
-.down { color: var(--down); }
-.flat { color: var(--text-2); }
-.tiles { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
-@media (min-width: 560px) { .tiles { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
-@media (min-width: 860px) { .tiles { grid-template-columns: repeat(6, minmax(0, 1fr)); } .tiles.t4 { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
-.tile { border: 1px solid var(--border); border-radius: 10px; padding: 10px; min-width: 0; }
-.tile .k { font-size: 12px; color: var(--text-2); }
-.tile .v { font-size: 18px; font-weight: 700; font-variant-numeric: tabular-nums; margin-top: 2px; }
-.tile .s { font-size: 11px; color: var(--text-3); margin-top: 2px; }
-.chart-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; }
-.chart-head h2 { margin: 0; }
-.seg { display: flex; flex-wrap: wrap; gap: 6px; }
-.seg button { padding: 5px 11px; min-height: 32px; font-size: 13px; }
-.legend { display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: 12px; color: var(--text-2); margin: 10px 0 4px; }
-.legend i { display: inline-block; width: 14px; height: 3px; border-radius: 2px; vertical-align: middle; margin-right: 5px; }
-.plot { position: relative; height: 280px; }
-.plot.small { height: 170px; }
-@media (min-width: 700px) { .plot { height: 360px; } .plot.small { height: 190px; } }
-.note { font-size: 12px; color: var(--text-3); margin: 8px 0 0; }
-.table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; margin: 0 -16px; padding: 0 16px; }
-table { border-collapse: collapse; width: 100%; min-width: 860px; font-size: 13px; font-variant-numeric: tabular-nums; }
-th, td { padding: 9px 8px; text-align: right; white-space: nowrap; border-bottom: 1px solid var(--border); }
-th { color: var(--text-2); font-weight: 600; font-size: 12px; }
-th button { font: inherit; color: inherit; background: none; border: 0; padding: 0; cursor: pointer; }
-th:first-child, td:first-child { text-align: left; position: sticky; left: 0; background: var(--surface); z-index: 1; }
-tbody tr { cursor: pointer; }
-tbody tr.sel td { background: var(--accent-bg); }
-td .sub { display: block; font-size: 11px; color: var(--text-3); font-weight: 400; }
-td b { font-weight: 700; }
-dl { margin: 0; font-size: 13px; }
-dt { font-weight: 700; margin-top: 10px; }
-dd { margin: 2px 0 0; color: var(--text-2); }
-footer { color: var(--text-3); font-size: 12px; margin-top: 16px; }
-#err { display: none; color: var(--up); }
-.form-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 10px; }
-@media (min-width: 560px) { .form-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
-@media (min-width: 860px) { .form-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
-.form-grid .all { grid-column: 1 / -1; }
-.f { display: flex; flex-direction: column; gap: 4px; font-size: 12px; color: var(--text-2); min-width: 0; }
-.f input, .f select, .f textarea {
-  font: inherit; font-size: 16px; color: var(--text); background: var(--surface);
-  border: 1px solid var(--border); border-radius: 8px; padding: 8px 10px; width: 100%; min-width: 0; min-height: 40px;
-}
-.f textarea { min-height: 96px; resize: vertical; }
-.f input:focus-visible, .f select:focus-visible, .f textarea:focus-visible, .btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
-.req { color: var(--up); }
-fieldset { border: 1px dashed var(--border); border-radius: 10px; padding: 10px 12px 12px; margin: 12px 0 0; min-width: 0; }
-legend { font-size: 13px; font-weight: 600; color: var(--text-2); padding: 0 4px; }
-.btns { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
-.btn {
-  font: inherit; font-size: 14px; border-radius: 8px; padding: 8px 14px; min-height: 40px; cursor: pointer;
-  border: 1px solid var(--border); background: var(--surface); color: var(--text);
-}
-.btn.primary { background: var(--accent); border-color: var(--accent); color: var(--surface); font-weight: 700; }
-.btn.small { font-size: 13px; padding: 5px 11px; min-height: 34px; }
-.btn.danger { color: var(--up); }
-.msg { font-size: 13px; margin-top: 10px; }
-.msg.bad { color: var(--up); }
-.msg.good { color: var(--text-2); }
-.msg ul { margin: 4px 0 0; padding-left: 18px; }
-.trades { display: grid; grid-template-columns: minmax(0, 1fr); gap: 10px; }
-@media (min-width: 860px) { .trades { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
-.trade { border: 1px solid var(--border); border-radius: 10px; padding: 12px; min-width: 0; }
-.trade-top { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 8px; }
-.trade-top .sym { font-weight: 800; font-size: 16px; }
-.badge { font-size: 11px; border: 1px solid var(--border); border-radius: 999px; padding: 1px 8px; color: var(--text-2); }
-.trade-pnl { font-size: 18px; font-weight: 800; font-variant-numeric: tabular-nums; margin-top: 6px; }
-.kv { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 2px 10px; font-size: 13px; margin-top: 8px; font-variant-numeric: tabular-nums; }
-.kv dt { margin: 0; font-weight: 400; color: var(--text-3); }
-.kv dd { margin: 0; color: var(--text); }
-.reason { font-size: 13px; background: var(--bg); border-radius: 8px; padding: 8px 10px; margin-top: 8px; white-space: pre-wrap; }
-.empty { font-size: 13px; color: var(--text-3); padding: 12px 0; }
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--txt);font-size:14px;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));
+  display:flex;justify-content:center;touch-action:manipulation;-webkit-user-select:none;user-select:none}
+#app{position:relative;width:100%;max-width:460px;height:100%;display:flex;flex-direction:column;gap:8px;padding-block:8px;min-height:0}
+.hud{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.stat{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:4px 2px;text-align:center;min-width:0}
+.stat b{display:block;font-family:var(--num);font-size:15px;color:var(--cyan);font-variant-numeric:tabular-nums}
+.stat span{font-size:11px;color:var(--dim)}
+.stat.chips b{color:var(--gold)}
+.corebar{height:10px;background:#1c1233;border:1px solid var(--line);border-radius:5px;overflow:hidden}
+.corebar i{display:block;height:100%;width:100%;background:linear-gradient(90deg,var(--pink),var(--cyan));transition:width .2s}
+#field{width:100%;aspect-ratio:200/112;max-width:100%;display:block;image-rendering:pixelated;
+  border:1px solid var(--pink);border-radius:6px;box-shadow:0 0 14px rgba(255,43,214,.35);background:#0a0618}
+.slot{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:8px;display:flex;flex-direction:column;gap:6px}
+.reels{display:flex;justify-content:center;gap:10px}
+.reel{position:relative;flex:1;max-width:92px;background:#05030b;border:2px solid var(--cyan);border-radius:8px;padding:4px 4px 2px;
+  color:var(--fg);font-family:var(--txt);font-size:12px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:2px}
+.reel canvas{width:100%;aspect-ratio:1;image-rendering:pixelated;display:block}
+.reel.held{border-color:var(--gold);box-shadow:0 0 10px rgba(255,225,74,.6)}
+.reel .tag{position:absolute;top:-8px;right:-6px;background:var(--gold);color:#201400;font-size:10px;font-weight:700;border-radius:4px;padding:1px 4px}
+#msg{min-height:2.6em;text-align:center;font-size:13px;line-height:1.3;color:var(--fg);word-break:keep-all;overflow-wrap:anywhere}
+#msg.jack{color:var(--gold);font-weight:700;text-shadow:0 0 8px rgba(255,225,74,.8)}
+.btns{display:flex;gap:6px}
+button{font-family:var(--txt)}
+.btn{background:var(--panel);border:1px solid var(--line);color:var(--fg);border-radius:8px;padding:10px 6px;font-size:13px;cursor:pointer;min-width:0}
+.btn:focus-visible,.reel:focus-visible,.card:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+#spin{flex:1;background:linear-gradient(180deg,#ff2bd6,#a3128a);border:0;color:#fff;font-weight:800;font-size:16px;
+  box-shadow:0 0 12px rgba(255,43,214,.55);line-height:1.2}
+#spin small{display:block;font-size:11px;font-weight:400;opacity:.9}
+#spin:disabled{filter:grayscale(.7);opacity:.6}
+.legend{flex:1;min-height:0;overflow-y:auto;display:grid;grid-template-columns:1fr 1fr;gap:6px;align-content:start}
+.leg{display:flex;gap:6px;align-items:flex-start;background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:6px;min-width:0}
+.leg canvas{width:28px;height:28px;flex:none;image-rendering:pixelated}
+.leg div{min-width:0;font-size:11px;line-height:1.35;color:var(--dim);word-break:keep-all;overflow-wrap:anywhere}
+.leg b{display:block;color:var(--fg);font-size:12px}
+.ov{position:absolute;inset:0;background:rgba(7,4,15,.93);display:flex;flex-direction:column;justify-content:center;align-items:stretch;
+  gap:10px;padding:16px 8px;z-index:5;overflow-y:auto;text-align:center}
+.ov h1{font-family:var(--num);font-size:26px;margin:0;color:var(--cyan);text-shadow:0 0 12px var(--cyan);line-height:1.25;text-wrap:balance}
+.ov h1 em{font-style:normal;color:var(--pink);text-shadow:0 0 12px var(--pink)}
+.ov h2{font-size:18px;margin:0;color:var(--gold);text-wrap:balance}
+.ov p{margin:0;color:var(--dim);line-height:1.5;font-size:13px;word-break:keep-all}
+.ov ul{margin:0;padding-left:18px;text-align:left;color:var(--fg);font-size:13px;line-height:1.6;word-break:keep-all}
+.card{background:var(--panel);border:1px solid var(--cyan);border-radius:8px;padding:12px 10px;color:var(--fg);cursor:pointer;text-align:left}
+.card b{display:block;color:var(--cyan);font-size:15px;margin-bottom:2px}
+.card span{font-size:13px;color:var(--dim);line-height:1.4;word-break:keep-all}
+.big{background:linear-gradient(180deg,#29f0ff,#0d8fa0);color:#03222a;border:0;border-radius:8px;padding:14px;font-size:17px;font-weight:800;cursor:pointer}
+@media (prefers-reduced-motion:reduce){.corebar i{transition:none}}
 </style>
 </head>
 <body>
-<div class="wrap">
-  <header>
-    <h1>미국 주식 분석 대시보드</h1>
-    <div class="meta" id="meta">데이터를 불러오는 중입니다.</div>
-  </header>
-  <div class="card" id="err"></div>
+<div id="app">
+  <div class="hud">
+    <div class="stat"><b id="hWave">1/20</b><span>웨이브</span></div>
+    <div class="stat"><b id="hCore">100</b><span>코어</span></div>
+    <div class="stat chips"><b id="hChips">30</b><span>칩</span></div>
+    <div class="stat"><b id="hPop">0/6</b><span>유닛</span></div>
+  </div>
+  <div class="corebar"><i id="coreFill"></i></div>
+  <canvas id="field" width="200" height="112"></canvas>
+  <div class="slot">
+    <div class="reels" id="reels"></div>
+    <div id="msg">스핀을 눌러 유닛을 뽑으세요</div>
+  </div>
+  <div class="btns">
+    <button class="btn" id="spin" type="button">스핀<small id="spinCost">칩 10</small></button>
+    <button class="btn" id="speed" type="button">속도 x1</button>
+    <button class="btn" id="mute" type="button">소리 켬</button>
+    <button class="btn" id="help" type="button">도움말</button>
+  </div>
+  <div class="legend" id="legend"></div>
 
-  <div class="chips" id="chips" role="group" aria-label="종목 선택"></div>
-
-  <section class="card" id="detail" hidden>
-    <div class="hero"><span class="sym" id="d-sym"></span><span class="nm" id="d-name"></span></div>
-    <div class="price-row"><span class="price" id="d-price"></span><span class="chg" id="d-chg"></span></div>
-    <div class="note" id="d-prev"></div>
-    <h3>기간별 수익률</h3>
-    <div class="tiles" id="t-ret"></div>
-    <h3>기술 지표</h3>
-    <div class="tiles t4" id="t-tech"></div>
-  </section>
-
-  <section class="card" id="charts" hidden>
-    <div class="chart-head">
-      <h2 id="c-title">주가와 이동평균</h2>
-      <div class="seg" id="range" role="group" aria-label="차트 기간"></div>
-    </div>
-    <div class="legend" aria-hidden="true">
-      <span><i style="background:var(--s-close)"></i>종가</span>
-      <span><i style="background:var(--s-ma20)"></i>20일 이동평균</span>
-      <span><i style="background:var(--s-ma60)"></i>60일 이동평균</span>
-      <span><i style="background:var(--s-ma120)"></i>120일 이동평균</span>
-    </div>
-    <div class="plot"><canvas id="cv-price" role="img" aria-label="종가와 이동평균 추이 차트"></canvas></div>
-    <h3>RSI(14)</h3>
-    <div class="plot small"><canvas id="cv-rsi" role="img" aria-label="RSI(14) 추이 차트"></canvas></div>
-    <p class="note">RSI(14)의 점선은 70(과매수 구간 기준)과 30(과매도 구간 기준)입니다.</p>
-  </section>
-
-  <section class="card" id="compare" hidden>
-    <h2>전체 종목 비교</h2>
-    <div class="table-wrap">
-      <table>
-        <thead><tr id="thead"></tr></thead>
-        <tbody id="tbody"></tbody>
-      </table>
-    </div>
-    <p class="note">열 제목을 누르면 정렬되고, 행을 누르면 위쪽 상세가 해당 종목으로 바뀝니다. 표는 좌우로 밀어서 볼 수 있습니다.</p>
-  </section>
-
-  <section class="card" id="journal">
-    <h2>매매 기록</h2>
-    <p class="note" style="margin-top:0">매수할 때 조건을 먼저 적고, 매도하면 결과와 조건 준수 여부를 남기는 기록입니다. 기록은 지금 쓰는 기기의 브라우저에만 저장되고 공개 저장소에는 올라가지 않습니다. 폰과 PC는 따로 저장되니 아래 백업 파일로 옮기세요. 금액 단위는 달러입니다.</p>
-    <div class="tiles" id="j-sum"></div>
-
-    <h3 id="j-form-title">새 매수 기록</h3>
-    <form id="j-form" novalidate autocomplete="off">
-      <div class="form-grid">
-        <label class="f"><span>종목 코드 <span class="req">필수</span></span><input name="symbol" list="j-symbols" placeholder="예: NVDA" autocapitalize="characters" spellcheck="false"></label>
-        <label class="f">유형<select name="type"><option value="stock">주식</option><option value="option">옵션 (1계약 = 100주)</option></select></label>
-        <label class="f"><span>매수일 <span class="req">필수</span></span><input name="buyDate" type="date"></label>
-        <label class="f" id="j-detail-wrap">옵션 내용<input name="detail" placeholder="예: 11/20 만기 180 콜"></label>
-        <label class="f"><span>매수 단가 <span class="req">필수</span></span><input name="buyPrice" inputmode="decimal" placeholder="옵션은 1주당 가격"></label>
-        <label class="f"><span>수량 <span class="req">필수</span></span><input name="qty" inputmode="decimal" placeholder="주식은 주, 옵션은 계약"></label>
-        <label class="f">매수 수수료<input name="buyFee" inputmode="decimal" placeholder="0"></label>
-        <label class="f">현재가 직접 입력<input name="manualPrice" inputmode="decimal" placeholder="대시보드에 없는 종목, 옵션"></label>
-        <label class="f all"><span>매수 조건 <span class="req">필수</span></span><textarea name="reason" placeholder="예: 실적 발표 전 RSI 30 이하, 20일 이동평균 회복 시 매수. 손절가 이탈 시 무조건 매도."></textarea></label>
-        <label class="f">목표가<input name="target" inputmode="decimal"></label>
-        <label class="f">손절가<input name="stop" inputmode="decimal"></label>
-      </div>
-      <fieldset>
-        <legend>매도 (팔았을 때만 입력)</legend>
-        <div class="form-grid">
-          <label class="f">매도일<input name="sellDate" type="date"></label>
-          <label class="f">매도 단가<input name="sellPrice" inputmode="decimal" placeholder="만기 소멸은 0"></label>
-          <label class="f">매도 수수료<input name="sellFee" inputmode="decimal" placeholder="0"></label>
-          <label class="f">매수 조건대로 지켰나<select name="ruleKept"><option value="">선택 안 함</option><option value="yes">지켰다</option><option value="no">안 지켰다</option></select></label>
-          <label class="f all">매도 메모<textarea name="note" placeholder="예: 손절가 도달했지만 버티다 더 잃음"></textarea></label>
-        </div>
-      </fieldset>
-      <div class="btns">
-        <button class="btn primary" type="submit" id="j-save">기록 저장</button>
-        <button class="btn" type="button" id="j-cancel" hidden>수정 취소</button>
-      </div>
-      <div class="msg" id="j-msg" role="status" aria-live="polite"></div>
-    </form>
-    <datalist id="j-symbols"></datalist>
-
-    <div class="chart-head" style="margin-top:18px">
-      <h3 style="margin:0">기록 목록</h3>
-      <div class="seg" id="j-filter" role="group" aria-label="기록 필터"></div>
-    </div>
-    <div class="trades" id="j-list" style="margin-top:10px"></div>
-
-    <div class="btns">
-      <button class="btn small" type="button" id="j-export">백업 파일 내보내기</button>
-      <button class="btn small" type="button" id="j-import">백업 파일 불러오기</button>
-      <input type="file" id="j-file" accept="application/json,.json" hidden>
-    </div>
-  </section>
-
-  <section class="card" id="glossary">
-    <h2>용어 설명</h2>
-    <dl>
-      <dt>기준일</dt><dd>데이터에 반영된 마지막 미국 거래일입니다. 모든 숫자는 기준일 종가로 계산합니다.</dd>
-      <dt>종가</dt><dd>정규장 마감 가격입니다. 액면분할은 반영하고 배당은 반영하지 않습니다.</dd>
-      <dt>전일 대비</dt><dd>직전 거래일 종가와 비교한 변동 금액과 비율입니다.</dd>
-      <dt>수익률</dt><dd>기준일 종가를 비교일 종가로 나눈 뒤 1을 뺀 값입니다. 비교일은 달력 기준 1주, 1개월, 3개월, 6개월, 1년 전 날짜이며 그날이 휴장이면 그 이전 마지막 거래일입니다. 연초 대비는 전년도 마지막 거래일 종가와 비교합니다. 배당은 포함하지 않습니다.</dd>
-      <dt>이동평균</dt><dd>최근 20, 60, 120거래일 종가의 단순 평균입니다. 이동평균 대비는 종가가 이동평균보다 몇 퍼센트 위나 아래에 있는지 나타냅니다.</dd>
-      <dt>RSI(14)</dt><dd>최근 14거래일의 상승폭과 하락폭으로 계산하는 0에서 100 사이 지표입니다(Wilder 방식). 통상 70 이상을 과매수 구간, 30 이하를 과매도 구간으로 봅니다.</dd>
-      <dt>52주 고가, 52주 저가</dt><dd>기준일을 포함한 최근 52주 동안의 장중 최고가와 최저가입니다. 52주 고가 대비는 종가가 52주 고가보다 얼마나 낮은지 나타냅니다.</dd>
-      <dt>변동성</dt><dd>최근 60거래일 일간 로그수익률의 표준편차를 1년 기준(252거래일)으로 환산한 값입니다. 클수록 가격 등락이 큽니다.</dd>
-      <dt>매수금액</dt><dd>매수 단가 × 수량 × 승수 + 매수 수수료입니다. 승수는 주식 1, 옵션 100입니다(옵션 1계약은 100주 단위).</dd>
-      <dt>매도금액</dt><dd>매도 단가 × 수량 × 승수 − 매도 수수료입니다.</dd>
-      <dt>실현손익</dt><dd>매도까지 기록한 건의 매도금액 − 매수금액입니다.</dd>
-      <dt>평가손익</dt><dd>보유 중인 건의 평가금액 − 매수금액입니다. 평가금액은 현재가 × 수량 × 승수이며 매도 수수료는 빼지 않습니다. 현재가는 대시보드 종목 주식이면 기준일 종가, 그 외에는 직접 입력한 현재가입니다. 현재가가 없으면 평가하지 않습니다.</dd>
-      <dt>손익률</dt><dd>손익을 매수금액으로 나눈 값입니다. 위쪽 기간별 수익률과는 다른 지표입니다.</dd>
-      <dt>승률</dt><dd>매도까지 기록한 건 중 실현손익이 0보다 큰 건의 비율입니다.</dd>
-      <dt>규칙 준수율</dt><dd>매도 때 매수 조건 준수 여부를 고른 건 중 "지켰다"를 고른 비율입니다.</dd>
-    </dl>
-  </section>
-
-  <footer>
-    데이터 출처는 Yahoo Finance이며 미국 장 마감 후 하루 한 번 갱신합니다. 이 화면은 참고용 정보이고 투자 권유가 아닙니다. 투자 판단과 결과에 대한 책임은 본인에게 있습니다.
-  </footer>
+  <div class="ov" id="ovTitle">
+    <h1>NEON <em>SPIN</em><br>DEFENSE</h1>
+    <p>2099년 네온 시티. 슬롯을 돌려 유닛을 뽑고<br>폭주한 기계들로부터 코어를 지키세요.</p>
+    <p id="bestLine"></p>
+    <button class="big" id="start" type="button">게임 시작</button>
+    <button class="btn" id="help2" type="button">도움말</button>
+  </div>
+  <div class="ov" id="ovPick" hidden>
+    <h2 id="pickTitle">웨이브 클리어</h2>
+    <p>임플란트를 하나 고르세요</p>
+    <div id="picks" style="display:flex;flex-direction:column;gap:8px"></div>
+  </div>
+  <div class="ov" id="ovEnd" hidden>
+    <h2 id="endTitle"></h2>
+    <p id="endText"></p>
+    <button class="big" id="again" type="button">다시 시작</button>
+  </div>
+  <div class="ov" id="ovHelp" hidden>
+    <h2>게임 방법</h2>
+    <ul>
+      <li>스핀을 누르면 칩을 쓰고 릴 3개가 돌아갑니다.</li>
+      <li>나온 심볼의 유닛이 소환됩니다. 같은 심볼 2개는 2레벨 유닛 하나로 나옵니다.</li>
+      <li>같은 심볼 3개는 잭팟입니다. 3레벨 유닛이 나오고 모든 유닛이 6초 동안 오버클럭(공격 속도 증가) 됩니다.</li>
+      <li>칩 심볼은 유닛 대신 칩을 줍니다.</li>
+      <li>릴을 누르면 홀드됩니다. 홀드한 릴은 다음 스핀에 그대로 남고, 홀드 하나당 칩이 더 듭니다. 최대 2개까지 됩니다.</li>
+      <li>유닛 정원이 차면 새 유닛은 같은 종류 유닛을 강화합니다. 같은 종류가 없으면 가장 약한 유닛을 강화합니다.</li>
+      <li>블레이드와 실드봇은 공중의 드론을 때릴 수 없습니다.</li>
+      <li>웨이브를 막을 때마다 임플란트를 하나 고릅니다. 20웨이브를 버티면 승리입니다.</li>
+    </ul>
+    <button class="big" id="helpClose" type="button">닫기</button>
+  </div>
 </div>
-
-<script src="vendor/chart.umd.js"></script>
-<script src="journal.js"></script>
 <script>
-(function () {
-  'use strict';
-  var RANGES = [{ k: '3m', label: '3개월', months: 3 }, { k: '6m', label: '6개월', months: 6 }, { k: '1y', label: '1년', months: 12 }, { k: '2y', label: '2년', months: 24 }];
-  var RET = [['1w', '1주'], ['1m', '1개월'], ['3m', '3개월'], ['6m', '6개월'], ['1y', '1년'], ['ytd', '연초 대비']];
-  var COLS = [
-    { k: 'symbol', label: '종목', get: function (t) { return t.symbol; } },
-    { k: 'close', label: '종가', get: function (t) { return t.summary.close; }, fmt: usd },
-    { k: 'chg', label: '전일 대비', get: function (t) { return t.summary.change_pct; }, pct: true },
-    { k: '1w', label: '1주', get: function (t) { return t.summary.returns['1w']; }, pct: true },
-    { k: '1m', label: '1개월', get: function (t) { return t.summary.returns['1m']; }, pct: true },
-    { k: '3m', label: '3개월', get: function (t) { return t.summary.returns['3m']; }, pct: true },
-    { k: '6m', label: '6개월', get: function (t) { return t.summary.returns['6m']; }, pct: true },
-    { k: '1y', label: '1년', get: function (t) { return t.summary.returns['1y']; }, pct: true },
-    { k: 'ytd', label: '연초 대비', get: function (t) { return t.summary.returns.ytd; }, pct: true },
-    { k: 'rsi', label: 'RSI(14)', get: function (t) { return t.summary.rsi14; }, fmt: function (v) { return v.toFixed(1); } },
-    { k: 'h52', label: '52주 고가 대비', get: function (t) { return t.summary.from_high52; }, pct: true },
-    { k: 'vol', label: '변동성', get: function (t) { return t.summary.vol60; }, fmt: function (v) { return (v * 100).toFixed(1) + '%'; } }
-  ];
-  var data = null, sel = null, range = '1y', sortKey = null, sortDir = -1, priceChart = null, rsiChart = null;
+(function(){
+'use strict';
+const $=id=>document.getElementById(id);
+const rnd=(a,b)=>a+Math.random()*(b-a);
+const PAL={k:'#0b0b14',w:'#ffffff',c:'#29f0ff',m:'#ff2bd6',y:'#ffe14a',r:'#ff3b5c',g:'#39ff88',p:'#8a5cff',s:'#f2c9a0',d:'#3a3f5c',l:'#a9b4d0',o:'#ff9a3c',b:'#3c7bff'};
+function mk(rows,swap){
+  const h=rows.length,w=Math.max.apply(null,rows.map(r=>r.length));
+  const c=document.createElement('canvas');c.width=w;c.height=h;const x=c.getContext('2d');
+  rows.forEach((r,j)=>{for(let i=0;i<r.length;i++){let ch=r[i];if(ch==='.')continue;if(swap&&swap[ch])ch=swap[ch];x.fillStyle=PAL[ch];x.fillRect(i,j,1,1);}});
+  return c;
+}
+const HEAVY=["....oooooo....","...oooooooo...","...owwoowwo...","...oooooooo...",".dddoooooddd..","dddoooooooddd.","dd.oooyyoo.dd.","dd.oooyyoo.dd.","dd.oooooooo.dd","...oooooooo...","...ddd..ddd...","...ddd..ddd...","..dddd..dddd..","..kkkk..kkkk.."];
+const SPR={
+  blade:mk(["...mmm....","..mmmmm...","..kccck..w","..ksssk..w","...kkk..w.",".dmmmmd.w.","dmmkmmmdw.","d.mmmm.sw.","..mmmm....","..dd.dd...","..dd.dd...","..kk.kk..."]),
+  gunner:mk(["...ccc....","..ccccc...","..kyyyk...","..ksssk...","...kkk....",".dbbbbd...","dbbbbsllll","d.bbbb.d..","..bbbb....","..dd.dd...","..dd.dd...","..kk.kk..."]),
+  hacker:mk(["...ggg....","..ggggg...",".ggkkkgg..",".gkgkgkg..",".ggkkkgg..","..ggggg...",".gdgggdg..",".g.lll.g..","..lgggl...","..dd.dd...","..dd.dd...","..kk.kk..."]),
+  shield:mk(["..llll....",".lcccll...",".llllll.pp","..dddd.pcp",".llllllpcp","lllllllpcp","l.llll.pcp","l.llll.pcp","..llll..pp","..dd.dd...",".ddd.ddd..",".kkk.kkk.."]),
+  chip:mk(["..........","..yyyyyy..",".yyooooyy.",".yoyyyyoy.",".yoyooyoy.",".yoyooyoy.",".yoyyyyoy.",".yyooooyy.","..yyyyyy..",".........."]),
+  glitch:mk(["..rrrr....",".rrrrrr...",".rwkrwkr..",".rrrrrr...","..rkkr....",".rrrrrr...","r.rrrr.r..","r.rrrr.r..","..r..r....","..k..k...."]),
+  runner:mk(["mm........","mwm...m...","mmmmmmmm..",".mmmmmmm..",".mmmmmm...",".m.m.m.m..",".k.k.k.k.."]),
+  drone:mk(["pp......pp",".pp.dd.pp.","..pppppp..",".prwppppp.","..pppppp..","...d..d..."]),
+  heavy:mk(HEAVY),
+  boss:mk(HEAVY,{o:'r',y:'c',d:'p'})
+};
+const UT={
+  blade:{name:'블레이드',hp:70,dmg:9,cd:0.6,range:11,spd:26,melee:true,rally:112,desc:'근접 공격수. 앞줄에서 빠르게 벱니다.'},
+  gunner:{name:'거너',hp:32,dmg:8,cd:0.8,range:72,spd:22,rally:70,desc:'원거리 사격. 드론도 맞힙니다.'},
+  hacker:{name:'해커',hp:26,dmg:4,cd:1.2,range:64,spd:22,rally:58,multi:3,desc:'적 3기를 한꺼번에 감전시키고 느리게 만듭니다.'},
+  shield:{name:'실드봇',hp:160,dmg:4,cd:1.0,range:11,spd:20,melee:true,rally:124,desc:'체력이 높은 방패 역할.'}
+};
+const SYMS=['blade','gunner','hacker','shield','chip'];
+const WEIGHT={blade:24,gunner:24,hacker:18,shield:18,chip:16};
+const SNAME={blade:'블레이드',gunner:'거너',hacker:'해커',shield:'실드봇',chip:'칩'};
+const LV=[0,1,2.4,6], CHIPPAY=[0,5,15,60];
+const CFG={hpA:1,hpG:1.08,dmgG:1.06,hpB:2.5,rw:1};
+const ET={
+  glitch:{hp:22,dmg:6,cd:0.9,range:10,spd:15,reward:3},
+  runner:{hp:13,dmg:5,cd:0.6,range:9,spd:32,reward:3},
+  drone:{hp:18,dmg:6,cd:1.3,range:58,spd:17,reward:5,fly:true},
+  heavy:{hp:95,dmg:16,cd:1.4,range:11,spd:9,reward:9},
+  boss:{hp:650,dmg:36,cd:1.5,range:14,spd:7,reward:60,scale:2}
+};
+const MAXWAVE=20, CORE_X=22, GROUND=96;
+const IMPLANTS=[
+  {n:'과부하 코일',d:'모든 유닛 공격력 +20%',f:m=>m.dmg*=1.2},
+  {n:'반응 가속기',d:'모든 유닛 공격 속도 +15%',f:m=>m.aspd*=1.15},
+  {n:'나노 수리',d:'코어 내구도 40 회복',f:(m,S)=>S.coreHp=Math.min(S.coreMax,S.coreHp+40),ok:S=>S.coreHp<S.coreMax},
+  {n:'강화 장갑',d:'코어 최대 내구도 +30, 내구도 30 회복',f:(m,S)=>{S.coreMax+=30;S.coreHp+=30;}},
+  {n:'암시장 할인',d:'스핀 비용 -1',f:m=>m.spinCost-=1,ok:S=>S.mods.spinCost>8},
+  {n:'현상금',d:'처치 보상 +25%',f:m=>m.reward*=1.25},
+  {n:'확장 슬롯',d:'유닛 정원 +1',f:(m,S)=>S.pop+=1,ok:S=>S.pop<10},
+  {n:'골드 칩',d:'칩 심볼 보상 +20%',f:m=>m.chip+=0.2,ok:S=>S.mods.chip<1.35},
+  {n:'홀드 해킹',d:'홀드 비용 -2',f:m=>m.holdCost-=2,ok:S=>S.mods.holdCost>2},
+  {n:'코어 포탑 강화',d:'코어 포탑 공격력 2배',f:m=>m.turret*=2},
+  {n:'블레이드 특화',d:'블레이드 공격력 +35%',f:m=>m.type.blade*=1.35},
+  {n:'거너 특화',d:'거너 공격력 +35%',f:m=>m.type.gunner*=1.35},
+  {n:'해커 특화',d:'해커 공격력 +35%',f:m=>m.type.hacker*=1.35},
+  {n:'실드봇 특화',d:'실드봇 공격력 +35%',f:m=>m.type.shield*=1.35}
+];
+let S=null, held=[false,false,false], spinAnim=null, muted=false, AC=null, best=0;
+try{best=parseInt(localStorage.getItem('neonspin_best'),10)||0;}catch(e){}
 
-  function $(id) { return document.getElementById(id); }
-  function el(tag, cls, text) { var e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; }
-  function store(k, v) { try { if (v === undefined) return localStorage.getItem(k); localStorage.setItem(k, v); } catch (e) { return null; } }
-  function usd(v) { return '$' + v.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
-  function cls(v) { return v > 0 ? 'up' : v < 0 ? 'down' : 'flat'; }
-  function arrow(v) { return v > 0 ? '▲ ' : v < 0 ? '▼ ' : ''; }
-  function pct(v) { return arrow(v) + (v > 0 ? '+' : '') + (v * 100).toFixed(2) + '%'; }
-  function md(iso) { return iso.slice(5, 7) + '.' + iso.slice(8, 10); }
-  function ymd(iso) { return iso.slice(0, 4) + '.' + iso.slice(5, 7) + '.' + iso.slice(8, 10); }
-  function cssVar(n) { return getComputedStyle(document.documentElement).getPropertyValue(n).trim(); }
-  function cur() { return data.tickers.filter(function (t) { return t.symbol === sel; })[0]; }
+function beep(f,d,type,v,delay){
+  if(muted||!AC)return;
+  try{const t=AC.currentTime+(delay||0),o=AC.createOscillator(),g=AC.createGain();
+    o.type=type||'square';o.frequency.value=f;g.gain.setValueAtTime(v||0.04,t);g.gain.exponentialRampToValueAtTime(0.0001,t+d);
+    o.connect(g);g.connect(AC.destination);o.start(t);o.stop(t+d);}catch(e){}
+}
+function newState(){
+  return {state:'play',wave:0,waveT:0,queue:[],chips:30,coreHp:100,coreMax:100,pop:6,units:[],enemies:[],fx:[],lines:[],
+    t:0,speed:1,turretCd:0,overclock:0,flash:0,reels:[rollSym(),rollSym(),rollSym()],
+    mods:{dmg:1,aspd:1,reward:1,chip:1,spinCost:10,holdCost:8,turret:1,type:{blade:1,gunner:1,hacker:1,shield:1}}};
+}
+function rollSym(){
+  let r=Math.random()*100;
+  for(const s of SYMS){r-=WEIGHT[s];if(r<0)return s;}
+  return 'chip';
+}
+function uMul(u){return LV[u.lv]+0.3*u.boost;}
+function uMax(u){return UT[u.type].hp*uMul(u);}
+function uDmg(u){return UT[u.type].dmg*uMul(u)*S.mods.dmg*S.mods.type[u.type];}
+function spinCost(){return S.mods.spinCost+held.filter(Boolean).length*S.mods.holdCost;}
 
-  function monthsBack(iso, m) {
-    var y = +iso.slice(0, 4), mo = +iso.slice(5, 7) - 1 - m, d = +iso.slice(8, 10);
-    var first = new Date(Date.UTC(y, mo, 1));
-    var last = new Date(Date.UTC(first.getUTCFullYear(), first.getUTCMonth() + 1, 0)).getUTCDate();
-    first.setUTCDate(Math.min(d, last));
-    return first.toISOString().slice(0, 10);
+function buildWave(w){
+  const q=[],boss=w%5===0;let n=6+w*2;if(boss)n=Math.floor(n*0.6);
+  let t=1;const gap=Math.max(0.4,1.3-w*0.04);
+  for(let i=0;i<n;i++){
+    const r=Math.random();let type='glitch';
+    if(w>=6&&r<0.12)type='heavy';else if(w>=4&&r<0.27)type='drone';else if(w>=2&&r<0.5)type='runner';
+    q.push({t:t,type:type});t+=gap*rnd(0.6,1.4);
   }
-
-  function tile(k, v, s, c) {
-    var t = el('div', 'tile');
-    t.appendChild(el('div', 'k', k));
-    t.appendChild(el('div', 'v' + (c ? ' ' + c : ''), v));
-    if (s) t.appendChild(el('div', 's', s));
-    return t;
+  if(boss)q.push({t:t*0.5,type:'boss'});
+  q.sort((a,b)=>a.t-b.t);return q;
+}
+function startWave(w){S.wave=w;S.waveT=0;S.queue=buildWave(w);S.state='play';}
+function spawnEnemy(type){
+  const d=ET[type],w=S.wave,hs=CFG.hpB*(1+CFG.hpA*(w-1))*Math.pow(CFG.hpG,w-1),ds=Math.pow(CFG.dmgG,w-1);
+  S.enemies.push({type:type,x:206,y:d.fly?rnd(56,68):GROUND+rnd(-3,3),hp:d.hp*hs,max:d.hp*hs,dmg:d.dmg*ds,reward:type==='boss'?20+2*w:d.reward*(24+2*w)/(3.5*(6+2*w)),cd:rnd(0,d.cd),slow:0});
+}
+function summon(type,lv,notes){
+  if(S.units.length<S.pop){
+    const u={type:type,lv:lv,boost:0,x:CORE_X+rnd(-2,4),y:GROUND+rnd(-3,3),cd:0,home:UT[type].rally+rnd(-8,8)};
+    u.hp=uMax(u);S.units.push(u);
+    notes.push(SNAME[type]+' '+lv+'레벨 소환');return;
   }
-
-  function renderChips() {
-    var box = $('chips'); box.textContent = '';
-    data.tickers.forEach(function (t) {
-      var b = el('button', 'chip', t.symbol);
-      b.type = 'button';
-      b.title = t.name;
-      b.setAttribute('aria-pressed', String(t.symbol === sel));
-      b.addEventListener('click', function () { select(t.symbol); });
-      box.appendChild(b);
-    });
+  const weak=(a,b)=>a.lv-b.lv||a.boost-b.boost;
+  let same=S.units.filter(u=>u.type===type).sort(weak)[0];
+  if(!same){same=S.units.slice().sort(weak)[0];same.boost+=LV[lv];same.hp=Math.min(uMax(same),same.hp+uMax(same)*0.5);
+    notes.push('정원 초과, '+SNAME[same.type]+' 강화');return;}
+  if(same.lv<lv){same.boost+=LV[same.lv];same.lv=lv;}else same.boost+=LV[lv];
+  same.hp=Math.min(uMax(same),same.hp+uMax(same)*0.5);
+  notes.push('정원 초과, '+SNAME[type]+' 강화');
+}
+function resolve(res){
+  const cnt={},notes=[];let jack=false;
+  res.forEach(s=>cnt[s]=(cnt[s]||0)+1);
+  for(const s in cnt){
+    const n=cnt[s];
+    if(n===3)jack=true;
+    if(s==='chip'){const g=Math.round(CHIPPAY[n]*S.mods.chip);S.chips+=g;notes.push('칩 +'+g);}
+    else summon(s,n,notes);
   }
-
-  function renderDetail() {
-    var t = cur(), s = t.summary;
-    $('d-sym').textContent = t.symbol;
-    $('d-name').textContent = t.name + ' · ' + t.name_en + ' · ' + t.exchange;
-    $('d-price').textContent = usd(s.close);
-    var chg = $('d-chg');
-    chg.className = 'chg ' + cls(s.change);
-    chg.textContent = '전일 대비 ' + arrow(s.change) + (s.change > 0 ? '+' : s.change < 0 ? '-' : '') + usd(Math.abs(s.change)).slice(1) + ' (' + (s.change_pct > 0 ? '+' : '') + (s.change_pct * 100).toFixed(2) + '%)';
-    $('d-prev').textContent = '기준일 ' + ymd(s.date) + ' 종가 · 전일 종가 ' + usd(s.prev_close);
-
-    var r = $('t-ret'); r.textContent = '';
-    RET.forEach(function (p) {
-      var v = s.returns[p[0]];
-      r.appendChild(tile(p[1] + ' 수익률', pct(v), '비교일 ' + ymd(s.return_base_dates[p[0]]), cls(v)));
-    });
-
-    var rsiState = s.rsi14 >= 70 ? '과매수 구간' : s.rsi14 <= 30 ? '과매도 구간' : '중립 구간';
-    var x = $('t-tech'); x.textContent = '';
-    x.appendChild(tile('RSI(14)', s.rsi14.toFixed(1), rsiState));
-    x.appendChild(tile('변동성', (s.vol60 * 100).toFixed(1) + '%', '60일 기준, 연환산'));
-    x.appendChild(tile('52주 고가 대비', pct(s.from_high52), '52주 고가 ' + usd(s.high52), cls(s.from_high52)));
-    x.appendChild(tile('52주 저가 대비', pct(s.from_low52), '52주 저가 ' + usd(s.low52), cls(s.from_low52)));
-    [['20', '20일'], ['60', '60일'], ['120', '120일']].forEach(function (m) {
-      x.appendChild(tile(m[1] + ' 이동평균 대비', pct(s.vs_ma[m[0]]), m[1] + ' 이동평균 ' + usd(s.ma[m[0]]), cls(s.vs_ma[m[0]])));
-    });
+  if(jack){S.overclock=6;S.flash=0.5;beep(523,.12,'square',.05);beep(659,.12,'square',.05,.1);beep(784,.12,'square',.05,.2);beep(1047,.3,'square',.05,.3);}
+  setMsg((jack?'잭팟! ':'')+notes.join(', '),jack);
+}
+function doSpin(instant){
+  if(!S||S.state!=='play'||spinAnim)return false;
+  const cost=spinCost();
+  if(S.chips<cost){setMsg('칩이 부족합니다. 적을 처치하면 칩을 얻습니다.');return false;}
+  S.chips-=cost;
+  const res=[0,1,2].map(i=>held[i]?S.reels[i]:rollSym());
+  const wasHeld=held.slice();held=[false,false,false];
+  if(instant){S.reels=res;resolve(res);return true;}
+  spinAnim={res:res,t:0,tick:0,held:wasHeld,done:[false,false,false]};
+  return true;
+}
+function tickSpin(dt){
+  if(!spinAnim)return;
+  const a=spinAnim;a.t+=dt;a.tick+=dt;
+  const flip=a.tick>0.06;if(flip)a.tick=0;
+  for(let i=0;i<3;i++){
+    if(a.done[i])continue;
+    if(a.held[i]||a.t>=0.35+0.22*i){a.done[i]=true;S.reels[i]=a.res[i];if(!a.held[i])beep(300+i*90,.06,'square',.04);}
+    else if(flip)S.reels[i]=SYMS[Math.floor(Math.random()*SYMS.length)];
   }
-
-  function renderRange() {
-    var box = $('range'); box.textContent = '';
-    RANGES.forEach(function (r) {
-      var b = el('button', null, r.label);
-      b.type = 'button';
-      b.setAttribute('aria-pressed', String(r.k === range));
-      b.addEventListener('click', function () { range = r.k; store('sd-range', range); renderRange(); renderCharts(); });
-      box.appendChild(b);
-    });
-  }
-
-  function baseOptions(labels) {
-    var grid = cssVar('--grid'), tx = cssVar('--text-2');
-    return {
-      responsive: true,
-      maintainAspectRatio: false,
-      animation: false,
-      interaction: { mode: 'index', intersect: false },
-      plugins: {
-        legend: { display: false },
-        tooltip: {
-          backgroundColor: cssVar('--surface'), titleColor: cssVar('--text'), bodyColor: cssVar('--text'),
-          borderColor: cssVar('--border'), borderWidth: 1, padding: 10, boxWidth: 10, boxHeight: 2,
-          callbacks: { title: function (items) { return ymd(labels[items[0].dataIndex]); } }
+  drawReels();
+  if(a.done[0]&&a.done[1]&&a.done[2]){spinAnim=null;resolve(a.res);drawReels();}
+}
+function nearest(list,x,range,filter){
+  let bestE=null,bd=1e9;
+  for(const e of list){if(filter&&!filter(e))continue;const d=Math.abs(e.x-x);if(d<bd){bd=d;bestE=e;}}
+  return bestE&&bd<=range?bestE:null;
+}
+function hurtEnemy(e,d){e.hp-=d;}
+function burst(x,y,color,n){for(let i=0;i<n;i++)S.fx.push({x:x,y:y,vx:rnd(-30,30),vy:rnd(-50,-5),life:rnd(.25,.5),c:color});}
+function update(dt){
+  S.t+=dt;S.waveT+=dt;
+  if(S.overclock>0)S.overclock-=dt;
+  if(S.flash>0)S.flash-=dt;
+  while(S.queue.length&&S.queue[0].t<=S.waveT)spawnEnemy(S.queue.shift().type);
+  const oc=S.overclock>0?1.5:1;
+  for(const u of S.units){
+    const d=UT[u.type];u.cd-=dt;
+    const can=d.melee?(e=>!ET[e.type].fly):null;
+    const tgt=nearest(S.enemies,u.x,d.range,can);
+    if(tgt){
+      if(u.cd<=0){
+        u.cd=d.cd/(S.mods.aspd*oc);
+        if(d.multi){
+          const inr=S.enemies.filter(e=>Math.abs(e.x-u.x)<=d.range).sort((a,b)=>a.x-b.x).slice(0,d.multi);
+          for(const e of inr){hurtEnemy(e,uDmg(u));e.slow=1.5;S.lines.push({x1:u.x+3,y1:u.y-8,x2:e.x,y2:e.y-5,life:.12,c:PAL.g});}
+        }else{
+          hurtEnemy(tgt,uDmg(u));
+          if(!d.melee)S.lines.push({x1:u.x+5,y1:u.y-6,x2:tgt.x,y2:tgt.y-5,life:.08,c:PAL.y});
+          else S.fx.push({x:tgt.x-2,y:tgt.y-6,vx:0,vy:0,life:.1,c:PAL.w});
         }
-      },
-      scales: {
-        x: {
-          grid: { display: false }, border: { color: grid },
-          ticks: { color: tx, maxRotation: 0, autoSkip: true, maxTicksLimit: 6, font: { size: 11 },
-            callback: function (v) { var d = labels[v]; return d.slice(2, 4) + '.' + d.slice(5, 7); } }
-        },
-        y: { position: 'right', grid: { color: grid }, border: { display: false }, ticks: { color: tx, font: { size: 11 }, maxTicksLimit: 6 } }
       }
-    };
-  }
-
-  function line(label, values, color, width, dash) {
-    return { label: label, data: values, borderColor: color, backgroundColor: color, borderWidth: width, borderDash: dash || [],
-      pointRadius: 0, pointHoverRadius: 4, pointHitRadius: 12, tension: 0, spanGaps: false };
-  }
-
-  function renderCharts() {
-    var t = cur(), from = monthsBack(t.summary.date, RANGES.filter(function (r) { return r.k === range; })[0].months);
-    var i0 = 0;
-    while (i0 < t.dates.length && t.dates[i0] < from) i0++;
-    function cut(a) { return a.slice(i0); }
-    var labels = cut(t.dates);
-    $('c-title').textContent = t.symbol + ' 주가와 이동평균';
-
-    if (priceChart) priceChart.destroy();
-    var po = baseOptions(labels);
-    po.scales.y.ticks.callback = function (v) { return '$' + v.toLocaleString('en-US'); };
-    po.plugins.tooltip.callbacks.label = function (c) { return ' ' + c.dataset.label + '  ' + (c.parsed.y == null ? '-' : usd(c.parsed.y)); };
-    priceChart = new Chart($('cv-price'), {
-      type: 'line',
-      data: { labels: labels, datasets: [
-        line('종가', cut(t.close), cssVar('--s-close'), 2),
-        line('20일 이동평균', cut(t.ma20), cssVar('--s-ma20'), 1.5),
-        line('60일 이동평균', cut(t.ma60), cssVar('--s-ma60'), 1.5),
-        line('120일 이동평균', cut(t.ma120), cssVar('--s-ma120'), 1.5)
-      ] },
-      options: po
-    });
-
-    if (rsiChart) rsiChart.destroy();
-    var ro = baseOptions(labels), ref = cssVar('--text-3');
-    ro.scales.y.min = 0; ro.scales.y.max = 100;
-    ro.scales.y.afterBuildTicks = function (axis) { axis.ticks = [0, 30, 50, 70, 100].map(function (v) { return { value: v }; }); };
-    ro.plugins.tooltip.filter = function (c) { return c.datasetIndex === 0; };
-    ro.plugins.tooltip.callbacks.label = function (c) { return ' RSI(14)  ' + (c.parsed.y == null ? '-' : c.parsed.y.toFixed(1)); };
-    var flat = function (v) { return labels.map(function () { return v; }); };
-    var r70 = line('70', flat(70), ref, 1, [4, 4]), r30 = line('30', flat(30), ref, 1, [4, 4]);
-    r70.pointHoverRadius = r30.pointHoverRadius = 0;
-    rsiChart = new Chart($('cv-rsi'), {
-      type: 'line',
-      data: { labels: labels, datasets: [line('RSI(14)', cut(t.rsi14), cssVar('--s-ma20'), 2), r70, r30] },
-      options: ro
-    });
-  }
-
-  function renderTable() {
-    var head = $('thead'); head.textContent = '';
-    COLS.forEach(function (c) {
-      var th = el('th'), b = el('button', null, c.label + (sortKey === c.k ? (sortDir < 0 ? ' ▾' : ' ▴') : ''));
-      b.type = 'button';
-      th.setAttribute('aria-sort', sortKey === c.k ? (sortDir < 0 ? 'descending' : 'ascending') : 'none');
-      b.addEventListener('click', function () {
-        if (sortKey === c.k) sortDir = -sortDir; else { sortKey = c.k; sortDir = c.k === 'symbol' ? 1 : -1; }
-        renderTable();
-      });
-      th.appendChild(b); head.appendChild(th);
-    });
-    var rows = data.tickers.slice();
-    if (sortKey) {
-      var col = COLS.filter(function (c) { return c.k === sortKey; })[0];
-      rows.sort(function (a, b) { var x = col.get(a), y = col.get(b); return (x < y ? -1 : x > y ? 1 : 0) * sortDir; });
-    }
-    var body = $('tbody'); body.textContent = '';
-    rows.forEach(function (t) {
-      var tr = el('tr', t.symbol === sel ? 'sel' : null);
-      tr.tabIndex = 0;
-      COLS.forEach(function (c) {
-        var td = el('td'), v = c.get(t);
-        if (c.k === 'symbol') { td.appendChild(el('b', null, t.symbol)); td.appendChild(el('span', 'sub', t.name)); }
-        else if (c.pct) { td.textContent = pct(v); td.className = cls(v); }
-        else td.textContent = c.fmt(v);
-        tr.appendChild(td);
-      });
-      function go() { select(t.symbol); $('detail').scrollIntoView({ behavior: 'smooth', block: 'start' }); }
-      tr.addEventListener('click', go);
-      tr.addEventListener('keydown', function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); go(); } });
-      body.appendChild(tr);
-    });
-  }
-
-  function select(sym) {
-    sel = sym; store('sd-symbol', sym);
-    renderChips(); renderDetail(); renderCharts(); renderTable();
-  }
-
-  function init(d) {
-    data = d;
-    var saved = store('sd-symbol'), savedRange = store('sd-range');
-    sel = data.tickers.some(function (t) { return t.symbol === saved; }) ? saved : data.tickers[0].symbol;
-    if (RANGES.some(function (r) { return r.k === savedRange; })) range = savedRange;
-    var upd = new Date(data.updated_at).toLocaleString('ko-KR', { timeZone: 'Asia/Seoul', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hour12: false });
-    $('meta').textContent = '기준일 ' + ymd(data.as_of) + ' (미국 거래일) · 갱신 ' + upd + ' (한국 시간) · 출처 ' + data.source;
-    ['detail', 'charts', 'compare', 'glossary'].forEach(function (id) { $(id).hidden = false; });
-    var px = {};
-    data.tickers.forEach(function (t) { px[t.symbol] = t.summary.close; });
-    window.SD_PRICES = { asOf: data.as_of, close: px };
-    document.dispatchEvent(new Event('sd-prices'));
-    renderRange();
-    select(sel);
-    if (window.matchMedia) {
-      var mq = window.matchMedia('(prefers-color-scheme: dark)');
-      var redraw = function () { renderCharts(); };
-      if (mq.addEventListener) mq.addEventListener('change', redraw); else if (mq.addListener) mq.addListener(redraw);
+    }else{
+      let goal=u.home;
+      const near=nearest(S.enemies,u.x,d.range+(d.melee?45:40),can);
+      if(near&&near.x<178)goal=Math.min(d.melee?999:132,near.x-d.range+2);
+      const dx=goal-u.x;if(Math.abs(dx)>1)u.x+=Math.sign(dx)*Math.min(Math.abs(dx),d.spd*dt);
     }
   }
+  for(const e of S.enemies){
+    const d=ET[e.type];e.cd-=dt;if(e.slow>0)e.slow-=dt;
+    const tgt=nearest(S.units,e.x,d.range);
+    const atCore=e.x<=CORE_X+d.range;
+    if(d.fly){
+      if(e.cd<=0){
+        if(tgt){e.cd=d.cd;tgt.hp-=e.dmg;S.lines.push({x1:e.x,y1:e.y,x2:tgt.x,y2:tgt.y-6,life:.08,c:PAL.p});}
+        else if(atCore){e.cd=d.cd;S.coreHp-=e.dmg;S.lines.push({x1:e.x,y1:e.y,x2:14,y2:70,life:.08,c:PAL.p});burst(16,74,PAL.r,2);}
+      }
+      if(!atCore)e.x-=d.spd*(e.slow>0?0.6:1)*dt;
+    }else if(tgt){
+      if(e.cd<=0){e.cd=d.cd;tgt.hp-=e.dmg;}
+    }else if(atCore){
+      if(e.cd<=0){e.cd=d.cd;S.coreHp-=e.dmg;burst(16,74,PAL.r,2);}
+    }else e.x-=d.spd*(e.slow>0?0.6:1)*dt;
+  }
+  S.turretCd-=dt;
+  if(S.turretCd<=0){
+    const t=nearest(S.enemies,CORE_X,62);
+    if(t){S.turretCd=1;hurtEnemy(t,5*S.mods.turret);S.lines.push({x1:13,y1:58,x2:t.x,y2:t.y-5,life:.1,c:PAL.c});}
+  }
+  for(let i=S.enemies.length-1;i>=0;i--){
+    const e=S.enemies[i];
+    if(e.hp<=0){S.chips+=e.reward*S.mods.reward*CFG.rw;burst(e.x,e.y-5,e.type==='boss'?PAL.r:PAL.m,e.type==='boss'?24:6);S.enemies.splice(i,1);}
+  }
+  for(let i=S.units.length-1;i>=0;i--){
+    const u=S.units[i];if(u.hp<=0){burst(u.x,u.y-5,PAL.c,6);S.units.splice(i,1);}
+  }
+  for(let i=S.fx.length-1;i>=0;i--){const p=S.fx[i];p.life-=dt;p.x+=p.vx*dt;p.y+=p.vy*dt;p.vy+=120*dt;if(p.life<=0)S.fx.splice(i,1);}
+  for(let i=S.lines.length-1;i>=0;i--){S.lines[i].life-=dt;if(S.lines[i].life<=0)S.lines.splice(i,1);}
+  if(S.coreHp<=0){S.coreHp=0;endGame(false);return;}
+  if(!S.queue.length&&!S.enemies.length)waveClear();
+}
+function waveClear(){
+  const bonus=Math.round((10+S.wave)*CFG.rw);S.chips+=bonus;
+  beep(660,.1,'triangle',.05);beep(880,.15,'triangle',.05,.1);
+  if(S.wave>=MAXWAVE){endGame(true);return;}
+  S.state='pick';showPick(bonus);
+}
+function pickOptions(){
+  const pool=IMPLANTS.filter(p=>!p.ok||p.ok(S)),out=[];
+  while(out.length<3&&pool.length)out.push(pool.splice(Math.floor(Math.random()*pool.length),1)[0]);
+  return out;
+}
+function applyPick(p){p.f(S.mods,S);startWave(S.wave+1);}
+function showPick(bonus){
+  if(!$('ovPick'))return;
+  $('pickTitle').textContent='웨이브 '+S.wave+' 클리어 (칩 +'+bonus+')';
+  const box=$('picks');box.textContent='';
+  pickOptions().forEach(p=>{
+    const b=document.createElement('button');b.type='button';b.className='card';
+    const n=document.createElement('b');n.textContent=p.n;const s=document.createElement('span');s.textContent=p.d;
+    b.appendChild(n);b.appendChild(s);
+    b.addEventListener('click',()=>{$('ovPick').hidden=true;applyPick(p);});
+    box.appendChild(b);
+  });
+  $('ovPick').hidden=false;
+}
+function endGame(win){
+  S.state='over';
+  const reached=win?MAXWAVE:S.wave-1;
+  if(reached>best){best=reached;try{localStorage.setItem('neonspin_best',String(best));}catch(e){}}
+  $('endTitle').textContent=win?'네온 시티를 지켜냈습니다':'코어가 파괴되었습니다';
+  $('endText').textContent=(win?'20웨이브를 모두 막았습니다.':'웨이브 '+S.wave+'에서 무너졌습니다.')+' 최고 기록: '+best+'웨이브 클리어';
+  $('ovPick').hidden=true;$('ovEnd').hidden=false;
+  if(!win){beep(200,.3,'sawtooth',.05);beep(120,.5,'sawtooth',.05,.25);}
+}
+function setMsg(t,jack){const m=$('msg');m.textContent=t;m.className=jack?'jack':'';}
 
-  fetch('data/prices.json?t=' + Date.now())
-    .then(function (r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
-    .then(init)
-    .catch(function (e) {
-      $('meta').textContent = '';
-      var box = $('err');
-      box.style.display = 'block';
-      box.textContent = '데이터를 불러오지 못했습니다. 잠시 후 새로고침해 주세요. (' + e.message + ')';
-    });
+/* 그리기 */
+const cv=$('field'),cx=cv.getContext('2d');cx.imageSmoothingEnabled=false;
+const bg=document.createElement('canvas');bg.width=200;bg.height=112;
+(function(){
+  const b=bg.getContext('2d');
+  const g=b.createLinearGradient(0,0,0,90);g.addColorStop(0,'#0a0618');g.addColorStop(1,'#3a1256');b.fillStyle=g;b.fillRect(0,0,200,112);
+  b.fillStyle='#ff2bd6';b.globalAlpha=.25;b.beginPath();b.arc(150,34,16,0,7);b.fill();b.globalAlpha=1;
+  let seed=7;const r=()=>(seed=(seed*16807)%2147483647)/2147483647;
+  for(let x=0;x<200;){const w=8+Math.floor(r()*10),h=22+Math.floor(r()*38);b.fillStyle='#1a0f36';b.fillRect(x,88-h,w,h);
+    for(let wy=88-h+3;wy<84;wy+=4)for(let wx=x+2;wx<x+w-1;wx+=3)if(r()<.28){b.fillStyle=r()<.5?'#29f0ff':(r()<.5?'#ff2bd6':'#ffe14a');b.globalAlpha=.55;b.fillRect(wx,wy,1,2);b.globalAlpha=1;}
+    x+=w+1;}
+  for(let x=0;x<200;){const w=12+Math.floor(r()*14),h=10+Math.floor(r()*22);b.fillStyle='#0d0820';b.fillRect(x,88-h,w,h);
+    if(r()<.5){b.fillStyle=r()<.5?'#ff2bd6':'#29f0ff';b.fillRect(x+2,88-h+3,Math.max(3,w-6),2);}
+    x+=w+2;}
+  b.fillStyle='#120a22';b.fillRect(0,88,200,24);
+  b.strokeStyle='rgba(255,43,214,.35)';b.lineWidth=1;
+  for(let y=90;y<112;y+=5){b.beginPath();b.moveTo(0,y+.5);b.lineTo(200,y+.5);b.stroke();}
+  for(let x=-60;x<260;x+=14){b.beginPath();b.moveTo(100+(x-100)*.55,88);b.lineTo(x,112);b.stroke();}
 })();
-</script>
-<script>
-(function () {
-  'use strict';
-  var J = window.Journal;
-  function $(id) { return document.getElementById(id); }
-  function el(tag, cls, text) { var e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; }
-  var storage = null;
-  try { storage = window.localStorage; storage.getItem(J.KEY); } catch (e) { storage = null; }
-  var trades = storage ? J.load(storage) : [];
-  var editId = null, filter = 'all';
-  var form = $('j-form'), msg = $('j-msg');
-  var FILTERS = [['all', '전체'], ['open', '보유 중'], ['closed', '매도 완료']];
-
-  function prices() { return (window.SD_PRICES && window.SD_PRICES.close) || {}; }
-  function money(c) { var a = Math.abs(c) / 100; return '$' + a.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
-  function signed(c) { return (c > 0 ? '▲ +' : c < 0 ? '▼ -' : '') + money(c); }
-  function pct(v) { return (v > 0 ? '+' : '') + (v * 100).toFixed(2) + '%'; }
-  function cls(v) { return v > 0 ? 'up' : v < 0 ? 'down' : 'flat'; }
-  function price(v) { return '$' + v.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 6 }); }
-  function qty(v) { return v.toLocaleString('en-US', { maximumFractionDigits: 6 }); }
-  function ymd(iso) { return iso.replace(/-/g, '.'); }
-  function today() { var d = new Date(); d.setMinutes(d.getMinutes() - d.getTimezoneOffset()); return d.toISOString().slice(0, 10); }
-
-  function say(text, bad, list) {
-    msg.textContent = '';
-    msg.className = 'msg ' + (bad ? 'bad' : 'good');
-    msg.appendChild(document.createTextNode(text));
-    if (list && list.length) { var ul = el('ul'); list.forEach(function (x) { ul.appendChild(el('li', null, x)); }); msg.appendChild(ul); }
-  }
-
-  function persist(next) {
-    if (!storage) { say('이 브라우저는 저장소를 쓸 수 없어 기록이 남지 않습니다. 사생활 보호 모드인지 확인해 주세요.', true); return false; }
-    if (!J.save(storage, next)) { say('저장에 실패했습니다. 브라우저 저장 공간을 확인해 주세요.', true); return false; }
-    trades = next; return true;
-  }
-
-  function tile(k, v, s, c) {
-    var t = el('div', 'tile');
-    t.appendChild(el('div', 'k', k));
-    t.appendChild(el('div', 'v' + (c ? ' ' + c : ''), v));
-    if (s) t.appendChild(el('div', 's', s));
-    return t;
-  }
-
-  function renderSummary() {
-    var s = J.summarize(trades, prices()), box = $('j-sum');
-    box.textContent = '';
-    box.appendChild(tile('보유 매수금액', money(s.openBuyC), '보유 중 ' + s.openCount + '건'));
-    box.appendChild(tile('평가손익', s.openEvalCount ? signed(s.unrealC) : '-',
-      s.openEvalCount ? '평가 ' + s.openEvalCount + '건 · 손익률 ' + pct(s.unrealPct) : '평가할 수 있는 보유 건 없음', s.openEvalCount ? cls(s.unrealC) : null));
-    box.appendChild(tile('실현손익', s.closedCount ? signed(s.realC) : '-',
-      s.closedCount ? '매도 ' + s.closedCount + '건 · 손익률 ' + pct(s.realPct) : '매도 기록 없음', s.closedCount ? cls(s.realC) : null));
-    box.appendChild(tile('승률', s.winRate == null ? '-' : (s.winRate * 100).toFixed(1) + '%', s.closedCount ? '이익 ' + s.wins + '건 / 매도 ' + s.closedCount + '건' : '매도 기록 없음'));
-    box.appendChild(tile('규칙 준수율', s.ruleRate == null ? '-' : (s.ruleRate * 100).toFixed(1) + '%', s.ruleAnswered ? '지킴 ' + s.ruleKept + '건 / 응답 ' + s.ruleAnswered + '건' : '응답 기록 없음'));
-    box.appendChild(tile('전체 기록', trades.length + '건', window.SD_PRICES ? '현재가 기준일 ' + ymd(window.SD_PRICES.asOf) : '현재가 불러오는 중'));
-  }
-
-  function renderFilter() {
-    var box = $('j-filter'); box.textContent = '';
-    FILTERS.forEach(function (f) {
-      var b = el('button', null, f[1]); b.type = 'button';
-      b.setAttribute('aria-pressed', String(f[0] === filter));
-      b.addEventListener('click', function () { filter = f[0]; renderFilter(); renderList(); });
-      box.appendChild(b);
-    });
-  }
-
-  function kv(dl, k, v, c) { dl.appendChild(el('dt', null, k)); dl.appendChild(el('dd', c || null, v)); }
-
-  function renderList() {
-    var box = $('j-list'); box.textContent = '';
-    var px = prices();
-    var list = trades.slice().sort(function (a, b) {
-      return a.buyDate < b.buyDate ? 1 : a.buyDate > b.buyDate ? -1 : String(b.createdAt || '').localeCompare(String(a.createdAt || ''));
-    }).filter(function (t) {
-      var closed = t.sellDate != null && t.sellPrice != null;
-      return filter === 'all' || (filter === 'closed') === closed;
-    });
-    if (!list.length) { box.appendChild(el('div', 'empty', trades.length ? '조건에 맞는 기록이 없습니다.' : '아직 기록이 없습니다. 위에서 첫 매수 기록을 남겨 보세요.')); return; }
-    list.forEach(function (t) {
-      var r = J.evaluate(t, px), card = el('div', 'trade');
-      var top = el('div', 'trade-top');
-      top.appendChild(el('span', 'sym', t.symbol));
-      top.appendChild(el('span', 'badge', t.type === 'option' ? '옵션' : '주식'));
-      top.appendChild(el('span', 'badge', r.closed ? '매도 완료' : '보유 중'));
-      if (t.detail) top.appendChild(el('span', 'badge', t.detail));
-      card.appendChild(top);
-      if (r.pnlC != null) card.appendChild(el('div', 'trade-pnl ' + cls(r.pnlC), (r.closed ? '실현손익 ' : '평가손익 ') + signed(r.pnlC) + ' (' + pct(r.pnlPct) + ')'));
-      else card.appendChild(el('div', 'trade-pnl flat', '평가손익 - (현재가 없음)'));
-      var dl = el('dl', 'kv');
-      kv(dl, '매수', ymd(t.buyDate) + ' · ' + price(t.buyPrice) + ' × ' + qty(t.qty) + (t.type === 'option' ? '계약 × 100' : '주'));
-      kv(dl, '매수금액', money(r.buyAmtC) + (t.buyFee ? ' (수수료 ' + price(t.buyFee) + ' 포함)' : ''));
-      if (r.closed) {
-        kv(dl, '매도', ymd(t.sellDate) + ' · ' + price(t.sellPrice));
-        kv(dl, '매도금액', money(r.sellAmtC) + (t.sellFee ? ' (수수료 ' + price(t.sellFee) + ' 차감)' : ''));
-        kv(dl, '조건 준수', t.ruleKept === 'yes' ? '지켰다' : t.ruleKept === 'no' ? '안 지켰다' : '선택 안 함');
-      } else if (r.price != null) {
-        kv(dl, '현재가', price(r.price) + (r.priceSource === 'dashboard' ? ' (기준일 종가)' : ' (직접 입력)'));
-        kv(dl, '평가금액', money(r.valueC));
-      }
-      if (t.target != null) kv(dl, '목표가', price(t.target) + (r.toTarget != null ? ' · 현재가 대비 ' + pct(r.toTarget) : ''));
-      if (t.stop != null) kv(dl, '손절가', price(t.stop) + (r.toStop != null ? ' · 현재가 대비 ' + pct(r.toStop) : ''));
-      card.appendChild(dl);
-      card.appendChild(el('div', 'reason', '매수 조건: ' + t.reason));
-      if (t.note) card.appendChild(el('div', 'reason', '매도 메모: ' + t.note));
-      var btns = el('div', 'btns');
-      var be = el('button', 'btn small', r.closed ? '수정' : '수정 · 매도 기록'); be.type = 'button';
-      be.addEventListener('click', function () { startEdit(t.id); });
-      var bd = el('button', 'btn small danger', '삭제'); bd.type = 'button';
-      bd.addEventListener('click', function () {
-        if (!confirm(t.symbol + ' ' + ymd(t.buyDate) + ' 기록을 삭제할까요? 되돌릴 수 없습니다.')) return;
-        if (persist(trades.filter(function (x) { return x.id !== t.id; }))) { if (editId === t.id) resetForm(); say('삭제했습니다.'); renderAll(); }
-      });
-      btns.appendChild(be); btns.appendChild(bd);
-      card.appendChild(btns);
-      box.appendChild(card);
-    });
-  }
-
-  function toggleDetail() { $('j-detail-wrap').hidden = form.elements.type.value !== 'option'; }
-
-  function resetForm() {
-    form.reset(); editId = null;
-    form.elements.buyDate.value = today();
-    $('j-form-title').textContent = '새 매수 기록';
-    $('j-save').textContent = '기록 저장';
-    $('j-cancel').hidden = true;
-    toggleDetail();
-  }
-
-  function startEdit(id) {
-    var t = trades.filter(function (x) { return x.id === id; })[0]; if (!t) return;
-    resetForm(); editId = id;
-    ['symbol', 'type', 'detail', 'buyDate', 'buyPrice', 'qty', 'buyFee', 'reason', 'target', 'stop', 'manualPrice', 'sellDate', 'sellPrice', 'sellFee', 'ruleKept', 'note'].forEach(function (k) {
-      var v = t[k]; form.elements[k].value = v == null || (/Fee$/.test(k) && v === 0) ? '' : String(v);
-    });
-    $('j-form-title').textContent = t.symbol + ' 기록 수정';
-    $('j-save').textContent = '수정 저장';
-    $('j-cancel').hidden = false;
-    toggleDetail();
-    say('');
-    $('j-form-title').scrollIntoView({ behavior: 'smooth', block: 'start' });
-  }
-
-  form.addEventListener('submit', function (e) {
-    e.preventDefault();
-    var f = {}; Array.prototype.forEach.call(form.elements, function (x) { if (x.name) f[x.name] = x.value; });
-    var res = J.normalize(f);
-    if (res.errors) { say('입력을 확인해 주세요.', true, res.errors); return; }
-    var t = res.trade, next;
-    if (editId) {
-      next = trades.map(function (x) { if (x.id !== editId) return x; t.id = x.id; t.createdAt = x.createdAt; return t; });
-    } else {
-      t.id = J.newId(); t.createdAt = new Date().toISOString();
-      next = trades.concat([t]);
+function drawSprite(spr,x,y,scale){scale*=1.5;const w=Math.round(spr.width*scale),h=Math.round(spr.height*scale);cx.drawImage(spr,Math.round(x-w/2),Math.round(y-h),w,h);return h;}
+function bar(x,y,w,ratio,color){cx.fillStyle='#000';cx.fillRect(Math.round(x-w/2),Math.round(y),w,2);cx.fillStyle=color;cx.fillRect(Math.round(x-w/2),Math.round(y),Math.max(0,Math.round(w*ratio)),2);}
+function render(){
+  cx.drawImage(bg,0,0);
+  if(!S)return;
+  cx.fillStyle='rgba(41,240,255,.35)';
+  for(let i=0;i<14;i++){const rx=(i*37+S.t*90)%220-10,ry=(i*53+S.t*160)%88;cx.fillRect(Math.round(rx),Math.round(ry),1,3);}
+  const low=S.coreHp/S.coreMax<0.3;
+  cx.fillStyle='#241640';cx.fillRect(4,62,18,34);cx.fillStyle='#3a2a66';cx.fillRect(6,58,14,6);
+  cx.fillStyle=low?PAL.r:PAL.c;for(let y=68;y<92;y+=6){cx.fillRect(8,y,3,2);cx.fillRect(15,y,3,2);}
+  const pulse=2+Math.round(Math.sin(S.t*5)+1);cx.globalAlpha=.35;cx.fillRect(13-pulse-1,54-pulse-1,pulse*2+2,pulse*2+2);cx.globalAlpha=1;cx.fillRect(11,52,4,4);
+  const all=[];
+  S.units.forEach(u=>all.push({o:u,u:true}));S.enemies.forEach(e=>all.push({o:e,u:false}));
+  all.sort((a,b)=>a.o.y-b.o.y);
+  for(const a of all){
+    const o=a.o;
+    if(a.u){
+      const sc=o.lv===3?1.4:(o.lv===2?1.15:1);
+      if(o.lv>1){cx.fillStyle=o.lv===3?PAL.y:PAL.c;cx.globalAlpha=.5;cx.fillRect(Math.round(o.x-5),Math.round(o.y),10,1);cx.globalAlpha=1;}
+      const h=drawSprite(SPR[o.type],o.x,o.y,sc);
+      if(S.overclock>0&&Math.floor(S.t*10)%2===0){cx.fillStyle=PAL.y;cx.fillRect(Math.round(o.x),Math.round(o.y-h-3),1,2);}
+      const r=o.hp/uMax(o);if(r<1)bar(o.x,o.y-h-2,10,r,PAL.g);
+    }else{
+      const d=ET[o.type],h=drawSprite(SPR[o.type],o.x,o.y,d.scale||1);
+      if(o.slow>0){cx.fillStyle=PAL.g;cx.fillRect(Math.round(o.x-1),Math.round(o.y-h-4),2,1);}
+      const r=o.hp/o.max;if(r<1)bar(o.x,o.y-h-2,d.scale?20:10,r,PAL.r);
     }
-    var wasEdit = !!editId;
-    if (persist(next)) { resetForm(); say(wasEdit ? '수정했습니다.' : '저장했습니다.'); renderAll(); }
-  });
-  $('j-cancel').addEventListener('click', function () { resetForm(); say(''); });
-  form.elements.type.addEventListener('change', toggleDetail);
-
-  $('j-export').addEventListener('click', function () {
-    if (!trades.length) { say('내보낼 기록이 없습니다.', true); return; }
-    var blob = new Blob([JSON.stringify({ version: 1, exportedAt: new Date().toISOString(), trades: trades }, null, 2)], { type: 'application/json' });
-    var a = document.createElement('a');
-    a.href = URL.createObjectURL(blob); a.download = 'trade-journal_' + today() + '.json';
-    document.body.appendChild(a); a.click(); a.remove();
-    setTimeout(function () { URL.revokeObjectURL(a.href); }, 1000);
-    say(trades.length + '건을 백업 파일로 내보냈습니다.');
-  });
-  $('j-import').addEventListener('click', function () { $('j-file').click(); });
-  $('j-file').addEventListener('change', function () {
-    var file = this.files && this.files[0]; this.value = '';
-    if (!file) return;
-    var rd = new FileReader();
-    rd.onload = function () {
-      var res = J.parseBackup(String(rd.result));
-      if (res.errors) { say('불러오지 못했습니다.', true, res.errors.slice(0, 5)); return; }
-      if (!confirm('지금 기록 ' + trades.length + '건을 백업 파일의 ' + res.trades.length + '건으로 바꿉니다. 계속할까요?')) return;
-      if (persist(res.trades)) { resetForm(); say(res.trades.length + '건을 불러왔습니다.'); renderAll(); }
-    };
-    rd.onerror = function () { say('파일을 읽지 못했습니다.', true); };
-    rd.readAsText(file);
-  });
-
-  function renderSymbols() {
-    var dl = $('j-symbols'); dl.textContent = '';
-    Object.keys(prices()).forEach(function (s) { var o = el('option'); o.value = s; dl.appendChild(o); });
   }
-  function renderAll() { renderSummary(); renderList(); }
-
-  document.addEventListener('sd-prices', function () { renderSymbols(); renderAll(); });
-  if (trades === null) { trades = []; say('저장된 기록을 읽지 못했습니다. 백업 파일이 있으면 불러와 주세요.', true); }
-  else if (!storage) say('이 브라우저는 저장소를 쓸 수 없어 기록이 남지 않습니다. 사생활 보호 모드인지 확인해 주세요.', true);
-  resetForm(); renderFilter(); renderSymbols(); renderAll();
+  for(const l of S.lines){cx.strokeStyle=l.c;cx.lineWidth=1;cx.beginPath();cx.moveTo(l.x1,l.y1);cx.lineTo(l.x2,l.y2);cx.stroke();}
+  for(const p of S.fx){cx.fillStyle=p.c;cx.fillRect(Math.round(p.x),Math.round(p.y),1,1);}
+  if(S.flash>0){cx.fillStyle='rgba(255,225,74,'+(S.flash*0.6)+')';cx.fillRect(0,0,200,112);}
+}
+const reelEls=[];
+function icon(canvas,sym){const c=canvas.getContext('2d');c.imageSmoothingEnabled=false;c.clearRect(0,0,14,14);const s=SPR[sym];c.drawImage(s,Math.floor((14-s.width)/2),Math.floor((14-s.height)/2));}
+function buildUi(){
+  const box=$('reels');
+  for(let i=0;i<3;i++){
+    const b=document.createElement('button');b.type='button';b.className='reel';b.id='reel'+i;
+    const c=document.createElement('canvas');c.width=14;c.height=14;
+    const n=document.createElement('span');const t=document.createElement('span');t.className='tag';t.textContent='홀드';t.hidden=true;
+    b.appendChild(c);b.appendChild(n);b.appendChild(t);box.appendChild(b);reelEls.push({b:b,c:c,n:n,t:t});
+    b.addEventListener('click',()=>{
+      if(!S||S.state!=='play'||spinAnim)return;
+      if(!held[i]&&held.filter(Boolean).length>=2){setMsg('홀드는 최대 2개까지 됩니다.');return;}
+      held[i]=!held[i];beep(held[i]?700:400,.05,'square',.03);drawReels();
+    });
+  }
+  const lg=$('legend');
+  ['blade','gunner','hacker','shield','chip'].forEach(k=>{
+    const d=document.createElement('div');d.className='leg';const c=document.createElement('canvas');c.width=14;c.height=14;icon(c,k);
+    const t=document.createElement('div');const b=document.createElement('b');b.textContent=SNAME[k];
+    t.appendChild(b);t.appendChild(document.createTextNode(k==='chip'?'스핀에 쓰는 돈. 칩 심볼이 나오면 바로 얻습니다.':UT[k].desc));
+    d.appendChild(c);d.appendChild(t);lg.appendChild(d);
+  });
+}
+function drawReels(){
+  if(!S)return;
+  for(let i=0;i<3;i++){const r=reelEls[i];icon(r.c,S.reels[i]);r.n.textContent=SNAME[S.reels[i]];r.b.classList.toggle('held',held[i]);r.t.hidden=!held[i];}
+}
+function hud(){
+  if(!S)return;
+  $('hWave').textContent=S.wave+'/'+MAXWAVE;$('hCore').textContent=Math.ceil(S.coreHp);
+  $('hChips').textContent=Math.floor(S.chips);$('hPop').textContent=S.units.length+'/'+S.pop;
+  $('coreFill').style.width=Math.max(0,S.coreHp/S.coreMax*100)+'%';
+  const cost=spinCost();$('spinCost').textContent='칩 '+cost;
+  $('spin').disabled=S.state!=='play'||!!spinAnim||S.chips<cost;
+}
+function start(){
+  if(!AC){try{AC=new (window.AudioContext||window.webkitAudioContext)();}catch(e){}}
+  S=newState();held=[false,false,false];spinAnim=null;startWave(1);
+  $('ovTitle').hidden=true;$('ovEnd').hidden=true;$('ovPick').hidden=true;
+  setMsg('스핀을 눌러 유닛을 뽑으세요');drawReels();
+}
+let last=0;
+function frame(ts){
+  const dt=Math.min(0.05,(ts-last)/1000||0);last=ts;
+  if(S&&S.state==='play')for(let i=0;i<S.speed&&S.state==='play';i++)update(dt);
+  tickSpin(dt);render();hud();requestAnimationFrame(frame);
+}
+buildUi();
+$('bestLine').textContent=best?'최고 기록: '+best+'웨이브 클리어':'';
+$('start').addEventListener('click',start);
+$('again').addEventListener('click',start);
+$('spin').addEventListener('click',()=>doSpin(false));
+$('speed').addEventListener('click',()=>{if(!S)return;S.speed=S.speed===1?2:1;$('speed').textContent='속도 x'+S.speed;});
+$('mute').addEventListener('click',()=>{muted=!muted;$('mute').textContent=muted?'소리 끔':'소리 켬';});
+let helpPrev=null;
+function openHelp(){$('ovHelp').hidden=false;if(S&&S.state==='play'){helpPrev='play';S.state='help';}}
+$('help').addEventListener('click',openHelp);$('help2').addEventListener('click',openHelp);
+$('helpClose').addEventListener('click',()=>{$('ovHelp').hidden=true;if(helpPrev&&S&&S.state==='help')S.state='play';helpPrev=null;});
+window.G={cfg:CFG,get S(){return S;},start:start,step:update,spin:()=>doSpin(true),options:pickOptions,pick:applyPick};
+requestAnimationFrame(frame);
 })();
 </script>
 </body>
